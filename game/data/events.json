@@ -1,0 +1,18 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "title": "奇怪的梦",
+      "description": "你最近总是做奇怪的梦，梦中有一个巨大的章鱼头怪物在呼唤你。",
+      "type": "mythos",
+      "effect": {"sanity": -5, "inspiration": 2}
+    },
+    {
+      "id": 2,
+      "title": "图书馆禁书",
+      "description": "你在图书馆的角落里发现了一本没有被编目的古籍。",
+      "type": "mythos",
+      "effect": {"sanity": -10, "knowledge": 3}
+    }
+  ]
+}

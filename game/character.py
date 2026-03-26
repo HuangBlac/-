@@ -5,10 +5,10 @@ from typing import Optional
 
 class SemesterType(Enum):
     """学期类型"""
-    SPRING = "上学期"      # 18周
-    SUMMER = "暑假"        # 7周
-    AUTUMN = "下学期"      # 19周
-    WINTER = "寒假"        # 5周
+    SPRING = "上学期"      # 8周
+    SUMMER = "暑假"        # 4周
+    AUTUMN = "下学期"      # 9周
+    WINTER = "寒假"        # 2周
 
 
 class ResearchDirection(Enum):
@@ -21,10 +21,10 @@ class ResearchDirection(Enum):
 
 # 每年各学期的周数
 SEMESTER_WEEKS = {
-    SemesterType.SPRING: 18,
-    SemesterType.SUMMER: 7,
-    SemesterType.AUTUMN: 19,
-    SemesterType.WINTER: 5,
+    SemesterType.SPRING: 8,
+    SemesterType.SUMMER: 4,
+    SemesterType.AUTUMN: 9,
+    SemesterType.WINTER: 2,
 }
 
 
@@ -107,7 +107,7 @@ class Player:
 
     def get_max_action_points(self) -> int:
         """根据年级获取每周最大行动点"""
-        action_map = {1: 3, 2: 4, 3: 5}
+        action_map = {1: 2, 2: 3, 3: 4}
         return action_map.get(self.year, 3)
 
     def consume_action_point(self) -> bool:

@@ -177,22 +177,30 @@ class ExamSystem:
     def get_research_direction_from_courses(self) -> ResearchDirection:
         """根据选课决定研究方向
 
+        选修课 → 研究方向映射：
+        - 法术与召唤法阵 → 法术与超自然科技分析
+        - 旧日支配者认知科学 → 旧日支配者与外神
+        - 超自然邪教与混血种族 → 神明附属种族与独立种族
+        - 神秘生物学 → 神明附属种族与独立种族
+
         Returns:
             研究方向
         """
         # 统计选修课类型
-        arcane_count = 0  # 法术与超自然科技
-        mythos_count = 0  # 神话文本与仪式
-        deity_count = 0   # 神明附属种族
-        outer_count = 0   # 旧日支配者与外神
+        arcane_count = 0    # 法术与超自然科技分析
+        mythos_count = 0    # 神话文本与仪式构造
+        deity_count = 0     # 神明附属种族与独立种族
+        outer_count = 0     # 旧日支配者与外神
 
         for course in self.course_system.selected_electives:
             if "法术" in course.name or "召唤" in course.name:
-                arcane_count += 1
-            if "神话文本" in course.name or "邪教" in course.name:
-                mythos_count += 1
+                arcane_count += 2  # 强关联
+            if "旧日支配者" in course.name or "外神" in course.name:
+                outer_count += 2   # 强关联
             if "邪教" in course.name or "混血" in course.name:
-                deity_count += 1
+                deity_count += 2   # 强关联
+            if "神秘生物" in course.name:
+                deity_count += 1  # 弱关联
 
         # 根据课程决定方向（选择最高的）
         counts = {
@@ -201,4 +209,12 @@ class ExamSystem:
             ResearchDirection.DEITY_RACE: deity_count,
             ResearchDirection.OUTER_GOD: outer_count,
         }
+
+        # 找出最高分
+        max_score = max(counts.values())
+
+        # 如果所有都是0（未选选修课），返回随机方向
+        if max_score == 0:
+            return random.choice(list(ResearchDirection))
+
         return max(counts, key=counts.get)

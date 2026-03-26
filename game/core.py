@@ -29,6 +29,7 @@ class GameCore:
         # 游戏状态
         self.turn_count = 0
         self.election_opened = False  # 选课是否已开放
+        self.awaiting_idea_decision = False  # 是否正在等待idea评估决定
 
     def _init_npcs(self) -> dict:
         """初始化NPC"""
@@ -77,6 +78,11 @@ class GameCore:
         Returns:
             是否继续游戏
         """
+        # 如果正在等待idea评估决定，先处理决定
+        if self.awaiting_idea_decision:
+            self.awaiting_idea_decision = False
+            return self._handle_idea_decision(action)
+
         # 检查行动点
         if not self.player.consume_action_point():
             self.log("本周行动点已用完！")
@@ -106,7 +112,8 @@ class GameCore:
             else:
                 action_result = self._do_research()
         elif action.lower() == "e":
-            # 评估Idea - 简化版：评估所有原始idea
+            # 评估Idea - 设置状态等待玩家决定
+            self.awaiting_idea_decision = True
             action_result = self._do_evaluate_idea()
             return True  # 需要继续让玩家做决定
         elif action == "3":
@@ -147,6 +154,10 @@ class GameCore:
         elif action == "a" or action == "A":
             # Debug: 快进一周
             self._debug_skip_week()
+            return False
+        elif action == "b" or action == "B":
+            # Debug: 跳转到研二（测试小论文系统）
+            self._debug_go_to_year2()
             return False
         elif action == "q":
             self.game_over = True
@@ -217,6 +228,42 @@ class GameCore:
         self.player.advance_week()
         self.log(f"[DEBUG] 时间快进：现在是第{self.player.year}学年 {self.player.semester_name} 第{self.player.week_in_semester}周")
 
+    def _debug_go_to_year2(self):
+        """Debug功能：跳转到研二（直接测试小论文系统）"""
+        from .character import ResearchDirection
+
+        self.player.year = 2
+        self.player.semester = SemesterType.SPRING
+        self.player.week_in_semester = 1
+        self.player.courses_selected = True
+
+        # 赋予一个研究方向（基于现有技能或随机）
+        if not self.player.research_direction:
+            # 优先选择已有技能中最高的
+            max_skill = max(self.player.skills.items(), key=lambda x: x[1])
+            skill_to_direction = {
+                "神话学": ResearchDirection.OUTER_GOD,
+                "密码学": ResearchDirection.MYTHOS_RITUAL,
+                "神秘生物学": ResearchDirection.DEITY_RACE,
+                "田野调查": ResearchDirection.DEITY_RACE,
+                "拉莱亚语言": ResearchDirection.MYTHOS_RITUAL,
+                "文本解读": ResearchDirection.MYTHOS_RITUAL,
+                "形式科学": ResearchDirection.ARCANE_ANALYSIS,
+                "说服": ResearchDirection.DEITY_RACE,
+                "量子克苏鲁学": ResearchDirection.OUTER_GOD,
+            }
+            self.player.research_direction = skill_to_direction.get(max_skill[0], ResearchDirection.OUTER_GOD)
+
+        # 重置行动点
+        self.player.reset_action_points()
+
+        self.log("[DEBUG] ===== 跳转到研二 =====")
+        self.log(f"当前状态：{self.player.year_name} {self.player.semester_name} 第{self.player.week_in_semester}周")
+        self.log(f"研究方向：{self.player.research_direction.value}")
+        self.log(f"知识：{self.player.knowledge} | 灵感：{self.player.inspiration} | 声望：{self.player.reputation}")
+        self.log("你现在可以开始阅读文献获取idea了！")
+        self.log("按2阅读文献 -> 获得idea -> 按E评估 -> 按3实验 -> 按4写初稿 -> 按5投稿")
+
     def _do_evaluate_idea(self) -> str:
         """评估Idea - 简化版：自动评估第一个原始idea"""
         from .research import IdeaStatus
@@ -242,6 +289,69 @@ class GameCore:
         self.log(menu)
 
         return "\n请输入你的决定（如：1a）："
+
+    def _handle_idea_decision(self, decision: str) -> bool:
+        """处理idea评估决定
+
+        Args:
+            decision: 决定字符串，如 "1a", "2d", "3i"
+
+        Returns:
+            是否继续游戏
+        """
+        from .research import IdeaStatus
+
+        raw_ideas = [i for i in self.research_system.ideas if i.status == IdeaStatus.RAW]
+
+        if not raw_ideas:
+            self.log("没有需要评估的idea！")
+            return True
+
+        # 解析决定：格式为 "序号+决定"
+        decision = decision.strip().lower()
+
+        if len(decision) < 2:
+            self.log("无效输入！格式如：1a（评估第1个idea，接受为初步想法）")
+            self.log("a=接受，d=丢弃，i=改进")
+            self.awaiting_idea_decision = True  # 重新等待输入
+            return True
+
+        try:
+            # 解析序号和决定
+            index = int(decision[:-1]) - 1  # 转换为0-based
+            action = decision[-1]
+
+            if index < 0 or index >= len(raw_ideas):
+                self.log(f"无效序号！有效范围：1-{len(raw_ideas)}")
+                self.awaiting_idea_decision = True
+                return True
+
+            # 获取对应的idea
+            idea = raw_ideas[index]
+
+            # 映射决定到evaluate_idea的参数
+            if action == "a":
+                result = self.research_system.evaluate_idea(
+                    self.research_system.ideas.index(idea), "accept")
+            elif action == "d":
+                result = self.research_system.evaluate_idea(
+                    self.research_system.ideas.index(idea), "discard")
+            elif action == "i":
+                result = self.research_system.evaluate_idea(
+                    self.research_system.ideas.index(idea), "improve")
+            else:
+                self.log("无效决定！a=接受，d=丢弃，i=改进")
+                self.awaiting_idea_decision = True
+                return True
+
+            self.log(result)
+            return True
+
+        except (ValueError, IndexError):
+            self.log("无效输入！格式如：1a（评估第1个idea）")
+            self.log("a=接受，d=丢弃，i=改进")
+            self.awaiting_idea_decision = True
+            return True
 
     def _do_class(self) -> str:
         """上课"""
@@ -450,6 +560,7 @@ class GameCore:
         actions.append(("9", "休息", "恢复理智"))
         actions.append(("0", "状态", "查看当前状态"))
         actions.append(("A", "快进", "[DEBUG] 时间快进一周"))
+        actions.append(("B", "跳转研二", "[DEBUG] 快速跳转到研二测试小论文"))
         actions.append(("q", "退出", "结束游戏"))
 
         return actions

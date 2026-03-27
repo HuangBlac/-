@@ -2,7 +2,7 @@
 import random
 from enum import Enum
 from typing import List, Optional, Dict
-from .character import Player, ResearchDirection
+from .character import Player, ResearchDirection, ability_check, CheckResult
 
 
 class IdeaStatus(Enum):
@@ -32,10 +32,15 @@ class Idea:
 class ExperimentResult:
     """实验结果"""
 
-    def __init__(self, name: str, method: str, quality: int):
+    def __init__(self, name: str, method: str, quality: int,
+                 theory: int = None, experiment: int = None, depth: int = None):
         self.name = name
         self.method = method  # 实验方法
         self.quality = quality  # 质量 1-5
+        # 三维数值（如果未提供，则从quality推导）
+        self.theory = theory if theory is not None else quality
+        self.experiment = experiment if experiment is not None else quality
+        self.depth = depth if depth is not None else quality
 
 
 # 不同研究方向的idea池
@@ -106,26 +111,48 @@ class Paper:
         self.quality = 0  # 论文质量
 
     def calculate_quality(self) -> int:
-        """计算论文质量"""
+        """计算论文质量（使用三维数值）"""
         if not self.ideas:
             return 0
 
         # 创新值平均
         avg_innovation = sum(i.innovation for i in self.ideas) / len(self.ideas)
 
-        # 实验丰富程度
-        total_experiments = sum(len(i.experiment_results) for i in self.ideas)
+        # 汇总实验结果的三维数值
+        total_theory = sum(r.theory for i in self.ideas for r in i.experiment_results)
+        total_experiment = sum(r.experiment for i in self.ideas for r in i.experiment_results)
+        total_depth = sum(r.depth for i in self.ideas for r in i.experiment_results)
+
+        # 理论深度 = 理论密度之和
+        total_theory_density = total_theory
 
         # 契合性（同一方向）
         directions = set(i.direction for i in self.ideas)
         coherence = 10 if len(directions) == 1 else 5
 
-        # 多样性
-        diversity = min(10, len(set(r.method for i in self.ideas for r in i.experiment_results)))
+        # 综合评分 = 创新值×2 + 实验支撑×2 + 理论深度
+        base_quality = int(avg_innovation * 2 + total_experiment * 2 + total_theory_density + coherence)
 
-        # 综合评分
-        quality = int(avg_innovation * 2 + total_experiments * 2 + coherence + diversity)
+        # EDU知识加成
+        edu_bonus = 1 + self.ideas[0].experiment_results[0].depth / 200 if self.ideas and self.ideas[0].experiment_results else 1
+
+        quality = int(base_quality * edu_bonus)
         return min(100, quality)
+
+    def get_stats(self) -> dict:
+        """获取论文统计数据（用于期刊投递）"""
+        if not self.ideas:
+            return {"创新值": 0, "理论深度": 0, "实验支撑": 0}
+
+        avg_innovation = sum(i.innovation for i in self.ideas) / len(self.ideas)
+        total_theory = sum(r.theory for i in self.ideas for r in i.experiment_results)
+        total_experiment = sum(r.experiment for i in self.ideas for r in i.experiment_results)
+
+        return {
+            "创新值": avg_innovation,
+            "理论深度": total_theory,
+            "实验支撑": total_experiment
+        }
 
 
 class ResearchSystem:
@@ -171,30 +198,96 @@ class ResearchSystem:
         return f"你开始跟随{self.player.relationships.get('导师', '导师')}进行{self.player.research_direction.value}..."
 
     def read_literature(self) -> str:
-        """阅读文献获取idea"""
+        """阅读文献获取idea（使用新判定系统）
+
+        1. 先进行感知(SEN)判定决定阅读进度
+        2. 达到100%时进行直觉(INT)判定决定idea创新值
+        """
         if not self.can_start_research():
             return "只有研二及以上才能开始科研！"
 
         if not self.player.research_direction:
             return "请先选择研究方向！"
 
-        # 进度增加
-        progress_gain = random.randint(10, 20) + self.player.knowledge // 10
-        self.literature_progress = min(100, self.literature_progress + progress_gain)
+        # ===== 第一步：感知判定决定阅读进度 =====
+        current_progress = self.literature_progress
 
-        result = f"你正在阅读文献...\n文献阅读进度: {self.literature_progress}%"
+        # 进行SEN感知判定
+        check_result, roll = ability_check(self.player, "SEN")
+        result_msg = [f"【阅读文献】判定结果: {check_result} (骰点:{roll})"]
 
-        # 进度达到100%时获得新idea
+        # 根据判定结果计算进度
+        edu_bonus = 1 + self.player.EDU / 100
+        sen_bonus = self.player.SEN / 10
+
+        if check_result == CheckResult.CRITICAL_SUCCESS:
+            # 大成功：进度 = max(70, i*2)
+            progress_gain = max(70, current_progress * 2) - current_progress
+            result_msg.append("你感觉这篇文章的知识直接流入了你的脑海！")
+        elif check_result in [CheckResult.EXTREME_SUCCESS, CheckResult.HARD_SUCCESS, CheckResult.SUCCESS]:
+            # 成功：正常进度
+            base_progress = 10 + sen_bonus
+            progress_gain = int(base_progress * edu_bonus)
+            result_msg.append("你仔细阅读这篇文章，收获颇丰。")
+        elif check_result == CheckResult.FAILURE:
+            # 失败：进度不良
+            progress_gain = int(10 * edu_bonus)
+            result_msg.append("你感觉这篇文章有些晦涩难懂，进度不良。")
+        else:
+            # 大失败：进度倒退
+            progress_gain = -current_progress + min(30, current_progress // 2)
+            result_msg.append("你感觉你过往所认知的知识全都是错误的...搞错了搞错了！")
+
+        self.literature_progress = max(0, min(100, current_progress + progress_gain))
+
+        result_msg.append(f"文献阅读进度: {self.literature_progress}%")
+
+        # ===== 第二步：进度达到100%时生成idea =====
         if self.literature_progress >= 100:
-            idea = self._generate_idea()
-            self.ideas.append(idea)
-            self.literature_progress = 0
-            result += f"\n你获得了新的idea: {idea.name}\n{idea.description}\n创新值: {idea.innovation}/10"
+            idea_result, idea_roll = self._generate_idea_with_check()
+            result_msg.append("")
+            result_msg.append(idea_result)
 
-        return result
+        return "\n".join(result_msg)
+
+    def _generate_idea_with_check(self) -> str:
+        """生成idea（使用INT判定决定创新值）"""
+        # 进行INT直觉判定
+        check_result, roll = ability_check(self.player, "INT")
+
+        # 从池中获取基础创新值
+        pool = IDEAS_POOL.get(self.player.research_direction, [])
+        name, desc, base_innovation = random.choice(pool)
+
+        if check_result == CheckResult.CRITICAL_SUCCESS:
+            # 大成功：创新值10
+            innovation = 10
+            msg = f"【大成功】你感觉你才思泉涌，想到了一个从未有过的天才想法！"
+        elif check_result in [CheckResult.EXTREME_SUCCESS, CheckResult.HARD_SUCCESS, CheckResult.SUCCESS]:
+            # 成功：按公式计算创新值
+            innovation = int(base_innovation * (1 + self.player.INT / 50))
+            innovation = max(1, min(10, innovation))
+            msg = f"【成功】你冥思苦想，想到了一个不错的点子。"
+        elif check_result == CheckResult.FAILURE:
+            # 失败：不生成idea，进度回退
+            self.literature_progress = random.randint(70, 80)
+            return f"【失败】你未能理解这篇文章的核心思想，无法产生有效的idea。\n文献阅读进度回退到{self.literature_progress}%。", roll
+        else:
+            # 大失败：进度清零，异变值+0.05
+            self.literature_progress = 0
+            self.player.mutation += 0.05
+            return f"【大失败】你的精神受到了冲击，感觉自己过往的学习就是一团灰尘...  \n文献阅读进度清零。\n【异变+0.05】", roll
+
+        # 创建idea
+        idea = Idea(name, desc, innovation, self.player.research_direction)
+        self.ideas.append(idea)
+        self.literature_progress = 0
+
+        msg += f"\n你获得了新的idea: {idea.name}\n{idea.description}\n创新值: {idea.innovation}/10"
+        return msg
 
     def _generate_idea(self) -> Idea:
-        """生成新idea"""
+        """生成新idea（旧版兼容）"""
         pool = IDEAS_POOL.get(self.player.research_direction, [])
         name, desc, innovation = random.choice(pool)
         # 添加一些随机变化
@@ -240,7 +333,10 @@ class ResearchSystem:
         return "无效的决定！"
 
     def conduct_experiment(self, idea_index: int) -> str:
-        """对idea进行实验验证"""
+        """对idea进行实验验证（使用新判定系统）
+
+        使用INT+SEN+EDU综合判定
+        """
         if idea_index >= len(self.ideas):
             return "无效的idea索引！"
 
@@ -253,29 +349,78 @@ class ResearchSystem:
         methods = EXPERIMENT_METHODS.get(self.player.research_direction, [])
         method_name, method_desc = random.choice(methods)
 
-        # 实验成功概率
-        success_rate = 0.5 + (self.player.knowledge * 0.02) + (self.player.inspiration * 0.01)
-        # 导师加成
-        advisor_favor = self.player.relationships.get("导师", 50)
-        success_rate += advisor_favor * 0.001
+        # 使用综合属性进行判定（取三者的平均值作为能力值）
+        avg_ability = (self.player.INT + self.player.SEN + self.player.EDU) // 3
+        check_result, roll = ability_check(self.player, "INT", avg_ability)
 
-        if random.random() < success_rate:
-            # 实验成功，产生结果
-            quality = random.randint(2, 5)
-            result = ExperimentResult(f"实验结果{len(idea.experiment_results)+1}",
-                                      method_name, quality)
-            idea.experiment_results.append(result)
+        result_msg = [f"【实验验证】判定结果: {check_result} (骰点:{roll})"]
+        result_msg.append(f"实验方法: {method_name}")
 
-            # 检查是否变为成熟想法
-            if len(idea.experiment_results) >= 2:
-                idea.status = IdeaStatus.MATURE
-
-            return f"实验成功！\n{method_desc}\n结果质量: {quality}/5\n实验结果数: {len(idea.experiment_results)}"
-        else:
-            # 实验失败
-            san_loss = random.randint(1, 3)
+        if check_result == CheckResult.CRITICAL_SUCCESS:
+            # 大成功：高质量结果，三维都高
+            theory = 5
+            experiment = 5
+            depth = 5
+            result_msg.append("你取得了突破性进展！实验结果远超预期！")
+            san_change = 5  # 理智回复
+            self.player.change_sanity(san_change)
+        elif check_result in [CheckResult.EXTREME_SUCCESS, CheckResult.HARD_SUCCESS]:
+            # 极难/困难成功：高result_msg.append("实验取得了很好的结果！")
+            theory = random.randint(3, 5)
+            experiment = random.randint(3, 5)
+            depth = random.randint(3, 5)
+            san_change = 2
+            self.player.change_sanity(san_change)
+        elif check_result == CheckResult.SUCCESS:
+            # 一般成功：正常结果
+            theory = random.randint(2, 4)
+            experiment = random.randint(2, 4)
+            depth = random.randint(2, 4)
+            result_msg.append("实验按预期进行，得到了有效结果。")
+            san_change = 0
+        elif check_result == CheckResult.FAILURE:
+            # 失败：结果质量低，可能损失
+            theory = random.randint(1, 2)
+            experiment = random.randint(1, 2)
+            depth = random.randint(1, 2)
+            san_loss = random.randint(3, 8)
             self.player.change_sanity(-san_loss)
-            return f"实验失败...\n{method_desc}\n理智-{san_loss}"
+            result_msg.append(f"实验结果不理想...理智-{san_loss}")
+            san_change = 0
+        else:
+            # 大失败：结果丢失，可能损失理智，异变+0.05
+            theory = 0
+            experiment = 0
+            depth = 0
+            san_loss = random.randint(8, 15)
+            self.player.change_sanity(-san_loss)
+            self.player.mutation += 0.05
+            result_msg.append(f"实验完全失败，实验材料损毁...理智-{san_loss}")
+            result_msg.append("【异变+0.05】")
+            san_change = 0
+
+        # 创建实验结果（三维数值）
+        quality = (theory + experiment + depth) // 3
+        result = ExperimentResult(
+            f"实验结果{len(idea.experiment_results)+1}",
+            method_name,
+            quality,
+            theory=theory,
+            experiment=experiment,
+            depth=depth
+        )
+        idea.experiment_results.append(result)
+
+        # 显示结果
+        result_msg.append(f"理论密度:{theory} | 实验支撑:{experiment} | 学科深度:{depth}")
+        result_msg.append(f"实验结果数: {len(idea.experiment_results)}")
+
+        # 检查是否变为成熟想法
+        if len(idea.experiment_results) >= 2:
+            idea.status = IdeaStatus.MATURE
+            result_msg.append("idea已升级为成熟想法！")
+
+        return "\n".join(result_msg)
 
     def write_draft(self, progress: int = 10) -> str:
         """撰写初稿"""
@@ -301,57 +446,93 @@ class ResearchSystem:
         return result
 
     def submit_paper(self) -> str:
-        """投稿论文"""
+        """投稿论文（使用新判定系统）
+
+        使用SOC+EDU综合判定
+        """
         if not self.current_paper or not self.current_paper.is_complete:
             return "没有完整的论文可以投稿！"
 
-        # 计算投稿成功率
-        base_success = 0.3
-        quality_bonus = self.current_paper.quality * 0.004
-        experience_bonus = self.player.papers_published * 0.05
-        reputation_bonus = self.player.reputation * 0.002
+        # 使用SOC+EDU综合判定
+        avg_ability = (self.player.SOC + self.player.EDU) // 2
+        check_result, roll = ability_check(self.player, "SOC", avg_ability)
 
-        success_rate = base_success + quality_bonus + experience_bonus + reputation_bonus
+        result_msg = [f"【投稿判定】判定结果: {check_result} (骰点:{roll})"]
 
-        roll = random.random()
+        # 论文统计
+        stats = self.current_paper.get_stats()
+        result_msg.append(f"论文质量: 创新{stats['创新值']:.1f} | 理论{stats['理论深度']} | 实验{stats['实验支撑']}")
 
-        if roll < 0.1:
-            # Desk Reject
-            self.current_paper = None
-            return "【Desk Reject】\n论文未经送审直接被拒！\n论文被摧毁。"
-        elif roll < 0.1 + success_rate * 0.3:
-            # Major Reject
-            self.current_paper.draft_progress = random.randint(30, 60)
-            self.current_paper.is_complete = False
-            # 损失2个结果
-            for idea in self.current_paper.ideas[:2]:
-                if idea.experiment_results:
-                    idea.experiment_results.pop()
-            return "【Major Reject】\n论文需要大修！\n初稿进度降至30%-60%，损失2个实验结果。"
-        elif roll < 0.1 + success_rate * 0.6:
-            # Minor Reject
-            self.current_paper.draft_progress = random.randint(70, 90)
-            self.current_paper.is_complete = False
-            # 损失0-1个结果
-            if self.current_paper.ideas[0].experiment_results:
-                self.current_paper.ideas[0].experiment_results.pop()
-            return "【Minor Reject】\n论文需要小修！\n初稿进度降至70%-90%。"
-        else:
-            # Accept
+        # 根据判定结果处理
+        if check_result == CheckResult.CRITICAL_SUCCESS:
+            # 大成功：直接接受
+            self.player.papers_published += 1
+            self.player.reputation += random.randint(15, 25)
+            san_restore = random.randint(10, 15)
+            self.player.change_sanity(san_restore)
+            result_msg.append("【直接接受】审稿人一致认为这是开创性工作！直接发表！")
+            result_msg.append(f"发表论文+1，声望+{self.player.reputation}，理智+{san_restore}")
+            self._clear_paper()
+        elif check_result in [CheckResult.EXTREME_SUCCESS, CheckResult.HARD_SUCCESS]:
+            # 极难/困难成功：小修后接受
             self.player.papers_published += 1
             self.player.reputation += random.randint(10, 20)
             san_restore = random.randint(5, 10)
             self.player.change_sanity(san_restore)
-
-            # 保存论文
-            published_paper = self.current_paper
+            result_msg.append("【小修后接受】论文经过小修后被接受！")
+            result_msg.append(f"发表论文+1，声望+{self.player.reputation}，理智+{san_restore}")
+            self._clear_paper()
+        elif check_result == CheckResult.SUCCESS:
+            # 一般成功：可能小修或大修
+            if random.random() < 0.5:
+                self.player.papers_published += 1
+                self.player.reputation += random.randint(10, 15)
+                san_restore = random.randint(5, 10)
+                self.player.change_sanity(san_restore)
+                result_msg.append("【接受】论文被接受！")
+                result_msg.append(f"发表论文+1，声望+{self.player.reputation}，理智+{san_restore}")
+                self._clear_paper()
+            else:
+                # 小修
+                self.current_paper.draft_progress = random.randint(70, 90)
+                self.current_paper.is_complete = False
+                result_msg.append("【小修】论文需要小修！看来得稍微修改点了。")
+        elif check_result == CheckResult.FAILURE:
+            # 失败：大修或拒稿
+            if random.random() < 0.5:
+                # 大修
+                self.current_paper.draft_progress = random.randint(30, 60)
+                self.current_paper.is_complete = False
+                # 损失实验结果
+                for idea in self.current_paper.ideas[:2]:
+                    if idea.experiment_results:
+                        idea.experiment_results.pop()
+                result_msg.append("【大修】论文需要大修！不但大部分都得重写，好多结果也得重做了...")
+            else:
+                # 拒稿
+                san_loss = random.randint(5, 10)
+                self.player.change_sanity(-san_loss)
+                result_msg.append(f"【拒稿】论文被拒绝...理智-{san_loss}")
+                self.current_paper = None
+        else:
+            # 大失败：Desk Reject，异变+0.05
+            san_loss = random.randint(10, 20)
+            self.player.change_sanity(-san_loss)
+            self.player.mutation += 0.05
+            result_msg.append(f"【Desk Reject】论文未经送审直接被拒！\n论文被摧毁...理智-{san_loss}")
+            result_msg.append("你感觉自己被学术界彻底否定了...")
             self.current_paper = None
-            # 清除已用掉的成熟想法
-            for idea in published_paper.ideas:
-                if idea in self.ideas:
-                    self.ideas.remove(idea)
 
-            return f"【Accept】\n恭喜！论文被接受！\n发表论文+1，声望+{published_paper.quality // 2}，理智+{san_restore}"
+        return "\n".join(result_msg)
+
+    def _clear_paper(self):
+        """清除当前论文（发表成功后）"""
+        published_paper = self.current_paper
+        self.current_paper = None
+        # 清除已用掉的成熟想法
+        for idea in published_paper.ideas:
+            if idea in self.ideas:
+                self.ideas.remove(idea)
 
     def get_idea_status(self) -> str:
         """获取所有idea的状态"""

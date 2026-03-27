@@ -42,8 +42,39 @@ class GameCore:
         }
 
     def log(self, message: str):
-        """添加消息到日志"""
+        """添加消息到日志（可能受异变影响）"""
+        # 根据异变值可能污染文本
+        if self.player.mutation > 0 and random.random() < self.player.mutation * 0.3:
+            message = self._corrupt_text(message)
         self.message_log.append(message)
+
+    def _corrupt_text(self, text: str) -> str:
+        """根据异变程度污染文本 - 用#=%等符号替换数字"""
+        # 数字替换表
+        digit_map = {
+            '0': '〇', '1': '一', '2': '二', '3': '三', '4': '四',
+            '5': '五', '6': '六', '7': '七', '8': '八', '9': '九'
+        }
+
+        # 严重时用特殊符号
+        if self.player.mutation >= 1:
+            digit_map = {
+                '0': '☆', '1': '★', '2': '◇', '3': '◆', '4': '○',
+                '5': '●', '6': '△', '7': '▲', '8': '□', '9': '■'
+            }
+
+        result = text
+        for old, new in digit_map.items():
+            if random.random() < self.player.mutation * 0.2:  # 概率替换
+                result = result.replace(old, new)
+
+        # 严重异变时插入不可名状的符号
+        if self.player.mutation >= 0.5 and random.random() < self.player.mutation * 0.3:
+            symbols = ["#@%", "&&&", "***", "???", "-%!%!", "~~~"]
+            insert_pos = random.randint(0, len(result))
+            result = result[:insert_pos] + random.choice(symbols) + result[insert_pos:]
+
+        return result
 
     def start_game(self):
         """开始游戏"""
@@ -55,18 +86,27 @@ class GameCore:
         self.log("")
 
     def display_status(self):
-        """显示当前状态"""
+        """显示当前状态（受异变影响）"""
         status = self.player.get_status()
-        print("-" * 30)
-        print(f"【当前状态】{self.player.year_name} {status['学期']} {status['周数']}")
-        print(f"理智: {status['理智']}")
-        print(f"行动点: {status['行动点']}")
-        print(f"知识: {status['知识']} | 灵感: {status['灵感']} | 声望: {status['声望']}")
-        print(f"研究方向: {status['研究方向']} | 已发表论文: {status['已发表论文']}")
-        print("-" * 30)
+
+        def p(text):
+            """打印经过异变处理的文本"""
+            if self.player.mutation > 0:
+                text = self._corrupt_text(text)
+            print(text)
+
+        p("-" * 30)
+        p(f"【当前状态】{self.player.year_name} {status['学期']} {status['周数']}")
+        p(f"理智: {status['理智']}")
+        p(f"行动点: {status['行动点']}")
+        p(f"INT: {status['INT直觉']} | SEN: {status['SEN感知']} | EDU: {status['EDU知识']}")
+        p(f"STR: {status['STR耐力']} | SOC: {status['SOC社交']}")
+        p(f"声望: {status['声望']} | 研究方向: {status['研究方向']}")
+        p(f"已发表论文: {status['已发表论文']}")
+        p("-" * 30)
 
     def display_skills(self):
-        """显示技能"""
+        """显示技能（旧系统，保留用于兼容）"""
         print("【技能】")
         for skill, level in self.player.skills.items():
             print(f"  {skill}: {level}")
@@ -84,6 +124,18 @@ class GameCore:
             return self._handle_idea_decision(action)
 
         # 检查行动点
+        # STR继续工作检测：高STR(>70)时概率触发
+        if self.player.STR > 70 and self.player.continue_action_count < self.player.max_continue_actions:
+            trigger_chance = (self.player.STR - 70) / 2  # 例如STR=80时为5%
+            if random.random() * 100 < trigger_chance:
+                # 触发继续工作！
+                self.player.continue_action_count += 1
+                self.log("【STR继续工作】你感觉自己还有精力，可以再做一件事！")
+                # 不消耗行动点，直接返回继续游戏
+                self._trigger_random_event()
+                self._check_game_over()
+                return not self.game_over
+
         if not self.player.consume_action_point():
             self.log("本周行动点已用完！")
             self.player.advance_week()
@@ -94,23 +146,47 @@ class GameCore:
         self.turn_count += 1
         action_result = ""
 
+        # 判断是否是假期
+        is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
+
         # 根据行动执行对应功能
         if action == "1":
-            if self.player.year == 1 and self.player.week_in_semester == 1 and not self.player.courses_selected:
-                action_result = self._do_select_courses()
+            if is_holiday:
+                # 假期：休息
+                action_result = self._do_rest()
+            elif self.player.year == 1 and not self.course_system.first_semester_completed:
+                # 研一且课程未完成：选课/上课
+                if self.player.week_in_semester == 1 and not self.player.courses_selected:
+                    action_result = self._do_select_courses()
+                else:
+                    action_result = self._do_class()
             else:
-                action_result = self._do_class()
-        elif action == "2":
-            if self.player.year == 1 and self._is_final_week() and self.player.courses_selected:
-                action_result = self._do_final_exam()
-            elif self.player.year >= 2:
-                # 研二及以上，检查是否有研究方向
+                # 课程已完成，进入科研：阅读文献
                 if not self.player.research_direction:
                     action_result = self.research_system.assign_research_direction()
                 else:
                     action_result = self.research_system.read_literature()
+
+        elif action == "2":
+            # 研一：期末考试 或 科研（课程完成后）
+            if self.player.year == 1:
+                if not self.course_system.first_semester_completed and self._is_final_week():
+                    # 课程未完成且是期末周：考试
+                    action_result = self._do_final_exam()
+                elif self.course_system.first_semester_completed:
+                    # 课程已完成：进入科研
+                    if not self.player.research_direction:
+                        action_result = self.research_system.assign_research_direction()
+                    else:
+                        action_result = self.research_system.read_literature()
+                else:
+                    action_result = "现在是上课时间，请先完成课程！"
             else:
-                action_result = self._do_research()
+                # 研二及以上：科研
+                if not self.player.research_direction:
+                    action_result = self.research_system.assign_research_direction()
+                else:
+                    action_result = self.research_system.read_literature()
         elif action.lower() == "e":
             # 评估Idea - 设置状态等待玩家决定
             self.awaiting_idea_decision = True
@@ -159,6 +235,11 @@ class GameCore:
             # Debug: 跳转到研二（测试小论文系统）
             self._debug_go_to_year2()
             return False
+        elif action.lower() == "m":
+            # Debug: 异变+1（测试异变效果）
+            self.player.mutation += 1
+            self.log(f"[DEBUG] 异变值+1，当前异变值: {self.player.mutation:.2f} ({self.player.mutation_level})")
+            return False
         elif action == "q":
             self.game_over = True
             return False
@@ -171,6 +252,9 @@ class GameCore:
 
         # 触发随机事件
         self._trigger_random_event()
+
+        # 异变效果：每轮理智减少 + 显示异变信息
+        self._apply_mutation_effect()
 
         # 检查行动点是否用完，用完则推进一周
         if self.player.action_points <= 0:
@@ -237,22 +321,12 @@ class GameCore:
         self.player.week_in_semester = 1
         self.player.courses_selected = True
 
-        # 赋予一个研究方向（基于现有技能或随机）
+        # 标记第一学期已完成（直接进入科研）
+        self.course_system.first_semester_completed = True
+
+        # 赋予一个研究方向（随机）
         if not self.player.research_direction:
-            # 优先选择已有技能中最高的
-            max_skill = max(self.player.skills.items(), key=lambda x: x[1])
-            skill_to_direction = {
-                "神话学": ResearchDirection.OUTER_GOD,
-                "密码学": ResearchDirection.MYTHOS_RITUAL,
-                "神秘生物学": ResearchDirection.DEITY_RACE,
-                "田野调查": ResearchDirection.DEITY_RACE,
-                "拉莱亚语言": ResearchDirection.MYTHOS_RITUAL,
-                "文本解读": ResearchDirection.MYTHOS_RITUAL,
-                "形式科学": ResearchDirection.ARCANE_ANALYSIS,
-                "说服": ResearchDirection.DEITY_RACE,
-                "量子克苏鲁学": ResearchDirection.OUTER_GOD,
-            }
-            self.player.research_direction = skill_to_direction.get(max_skill[0], ResearchDirection.OUTER_GOD)
+            self.player.research_direction = random.choice(list(ResearchDirection))
 
         # 重置行动点
         self.player.reset_action_points()
@@ -260,7 +334,8 @@ class GameCore:
         self.log("[DEBUG] ===== 跳转到研二 =====")
         self.log(f"当前状态：{self.player.year_name} {self.player.semester_name} 第{self.player.week_in_semester}周")
         self.log(f"研究方向：{self.player.research_direction.value}")
-        self.log(f"知识：{self.player.knowledge} | 灵感：{self.player.inspiration} | 声望：{self.player.reputation}")
+        self.log(f"INT:{self.player.INT} | SEN:{self.player.SEN} | EDU:{self.player.EDU}")
+        self.log(f"STR:{self.player.STR} | SOC:{self.player.SOC} | 声望:{self.player.reputation}")
         self.log("你现在可以开始阅读文献获取idea了！")
         self.log("按2阅读文献 -> 获得idea -> 按E评估 -> 按3实验 -> 按4写初稿 -> 按5投稿")
 
@@ -354,20 +429,49 @@ class GameCore:
             return True
 
     def _do_class(self) -> str:
-        """上课"""
-        courses = ["神话学", "密码学", "神秘生物学", "量子克苏鲁学"]
-        course = random.choice(courses)
+        """上课（研一时进行）"""
+        # 获取当前需要上的课程
+        active_courses = self.course_system.get_active_courses()
 
-        san_loss = random.randint(1, 5)
-        knowledge_gain = random.randint(1, 3)
-        inspiration_gain = random.randint(0, 2)
+        if not active_courses:
+            return "你已完成所有课程，可以开始科研了！"
 
+        # 随机选择一门课上
+        course = random.choice(active_courses)
+
+        # 增加学习次数
+        course.study_count += 1
+
+        # 判定成功/失败（只是学习进度，不是考试）
+        difficulty = self.player.EDU + course.study_count * 10
+        roll = random.randint(1, 100)
+
+        if roll == 1:
+            # 大成功：大幅提升属性
+            bonus = random.randint(2, 4)
+            for attr in ["INT", "SEN", "EDU", "STR"]:
+                if attr in course.attributes:
+                    current = getattr(self.player, attr)
+                    setattr(self.player, attr, current + bonus)
+            result = f"【大成功】你对{course.name}有了突飞猛进的理解！\n{attr}+{bonus}"
+        elif roll < difficulty:
+            # 成功
+            bonus = random.randint(1, 2)
+            for attr in ["INT", "SEN", "EDU", "STR"]:
+                if attr in course.attributes:
+                    current = getattr(self.player, attr)
+                    setattr(self.player, attr, current + bonus)
+            result = f"你认真学习了{course.name}课。\n{attr}+{bonus}"
+        else:
+            # 失败
+            result = f"你上了{course.name}课，但感觉收获不大。"
+
+        # 理智消耗
+        san_loss = random.randint(1, 3)
         self.player.change_sanity(-san_loss)
-        self.player.add_skill(course, knowledge_gain)
-        self.player.knowledge += knowledge_gain
-        self.player.inspiration += inspiration_gain
+        result += f"\n理智-{san_loss}"
 
-        return f"你上了{course}课。\n知识+{knowledge_gain}，灵感+{inspiration_gain}，理智-{san_loss}"
+        return result
 
     def _do_research(self) -> str:
         """进行研究"""
@@ -470,10 +574,55 @@ class GameCore:
 
         return f"你好好休息了一周\n理智+{san_restore}"
 
+    def _apply_mutation_effect(self):
+        """应用异变效果：每轮理智减少 + 显示异变信息"""
+        if self.player.mutation <= 0:
+            return
+
+        # 每轮理智减少 = 异变值 × 5
+        sanity_loss = int(self.player.mutation * 5)
+        if sanity_loss > 0:
+            self.player.change_sanity(-sanity_loss)
+            self.log(f"【异变侵蚀】你感觉到不可名状的痛苦...理智-{sanity_loss}")
+
+        # 异变信息（根据严重程度）
+        mutation_messages = {
+            (0, 0.5): [
+                "你感觉一阵不安...",
+                "有什么东西在心里躁动...",
+                "你隐约听到一些奇怪的声音...",
+            ],
+            (0.5, 1): [
+                "当你睡下，你总感觉到一阵不安...",
+                "镜子里的你似乎有点不一样了...",
+                "你发现手上出现了奇怪的花纹...",
+            ],
+            (1, 2): [
+                "现实与梦境的边界开始模糊...",
+                "你看到的文字开始扭曲变形...",
+                "脑海中的声音越来越清晰...",
+            ],
+            (2, 100): [
+                "你已经不属于这个世界了...",
+                "是不可名状，还是本就如此？",
+                "一切都没有意义了...",
+            ]
+        }
+
+        # 显示异变信息
+        for (min_val, max_val), messages in mutation_messages.items():
+            if min_val <= self.player.mutation < max_val:
+                if random.random() < 0.3:  # 30%概率触发
+                    self.log(f"【{self.player.mutation_level}】{random.choice(messages)}")
+                break
+
     def _trigger_random_event(self):
         """触发随机事件"""
+        # 假期（暑假/寒假）不触发负面事件
+        is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
+
         if random.random() < 0.3:  # 30%概率触发
-            event = self.event_system.get_random_event()
+            event = self.event_system.get_random_event(is_holiday)
             if event:
                 self.log(f"【随机事件】{event['title']}")
                 self.log(event['description'])
@@ -486,15 +635,22 @@ class GameCore:
 
     def _check_game_over(self):
         """检查游戏结束条件"""
-        # 理智归零
-        if self.player.sanity <= 0:
+        # 异变值≥2：死亡
+        if self.player.mutation >= 2:
             self.game_over = True
-            self.ending = "疯狂"
+            self.ending = "异变"
             self.log("\n" + "=" * 50)
-            self.log("你彻底失去了理智...")
-            self.log("你的研究生涯在此终结")
-            self.log(f"最终结局：陷入疯狂（已发表{self.player.papers_published}篇论文）")
+            self.log("你的异变程度已经无可挽回...")
+            self.log("你变成了一个不可名状的怪物")
+            self.log(f"最终结局：异变死亡（已发表{self.player.papers_published}篇论文）")
             self.log("=" * 50)
+
+        # 理智归零（异变后恢复理智，不再直接结束）
+        elif self.player.sanity <= 0:
+            self.log("\n" + "【警告】你的理智彻底耗尽！但你并没有完全疯狂...")
+            self.log(f"【异变+1】你的身体开始发生不可名状的变化...")
+            self.log(f"当前异变值：{self.player.mutation:.2f} ({self.player.mutation_level})")
+            self.log("你恢复了部分理智，但异变程度加重了！")
 
         # 毕业论文完成
         elif self.graduation_thesis.passed:
@@ -524,22 +680,31 @@ class GameCore:
         """获取可选行动"""
         actions = []
 
-        # 研一：课程相关
-        if self.player.year == 1:
-            # 选课（第一周）
+        # 判断是否进入科研阶段（研二 或 研一课程已完成）
+        in_research = self.player.year >= 2 or self.course_system.first_semester_completed
+
+        # 判断是否是假期（暑假/寒假）
+        is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
+
+        if not in_research and not is_holiday:
+            # 研一且课程未完成且不是假期：课程相关
+            # 选课（第一周且未选课）
             if self.player.week_in_semester == 1 and not self.player.courses_selected:
                 actions.append(("1", "选课", "选择本学期课程"))
             else:
                 actions.append(("1", "上课", "参加课程学习"))
 
             # 期末考试（最后一周）
-            if self._is_final_week() and self.player.courses_selected:
+            if self._is_final_week():
                 actions.append(("2", "期末考试", "参加期末考试"))
 
-        # 研二及以上：科研相关
-        if self.player.year >= 2:
+        elif is_holiday:
+            # 假期期间：显示假期选项
+            actions.append(("1", "假期休息", "享受假期时光"))
+
+        # 科研阶段
+        if in_research:
             actions.append(("2", "阅读文献", "获取创新idea"))
-            # 如果有原始idea，显示评估选项
             raw_ideas = [i for i in self.research_system.ideas if i.status.value == "原始idea"]
             if raw_ideas:
                 actions.append(("E", "评估Idea", f"评估{len(raw_ideas)}个新idea"))
@@ -561,6 +726,7 @@ class GameCore:
         actions.append(("0", "状态", "查看当前状态"))
         actions.append(("A", "快进", "[DEBUG] 时间快进一周"))
         actions.append(("B", "跳转研二", "[DEBUG] 快速跳转到研二测试小论文"))
+        actions.append(("M", "异变+1", "[DEBUG] 测试异变效果"))
         actions.append(("q", "退出", "结束游戏"))
 
         return actions

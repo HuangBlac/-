@@ -93,8 +93,17 @@ class EventSystem:
             },
         ]
 
-    def get_random_event(self) -> dict:
-        """获取随机事件"""
+    def get_random_event(self, is_holiday: bool = False) -> dict:
+        """获取随机事件
+
+        Args:
+            is_holiday: 是否在假期（暑假/寒假）
+        """
+        if is_holiday:
+            # 假期事件池：主要是正面或中性事件
+            holiday_events = [e for e in self.events if e.get("effect", {}).get("sanity", 0) >= 0]
+            if holiday_events:
+                return random.choice(holiday_events)
         return random.choice(self.events)
 
     def get_events_by_type(self, event_type: str) -> list:

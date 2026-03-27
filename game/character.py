@@ -1,6 +1,99 @@
 """角色系统"""
+import random
 from enum import Enum
 from typing import Optional
+from dataclasses import dataclass
+
+
+# ========== 判定结果 ==========
+class CheckResult:
+    """判定结果类型"""
+    CRITICAL_SUCCESS = "大成功"   # 骰点=1
+    EXTREME_SUCCESS = "极难成功"  # <能力值/5
+    HARD_SUCCESS = "困难成功"    # <能力值/2
+    SUCCESS = "一般成功"          # <能力值
+    FAILURE = "失败"             # >能力值 且 <=95
+    CRITICAL_FAILURE = "大失败"  # 96-100
+
+
+def ability_check(player, ability: str, difficulty: int = None) -> tuple:
+    """能力检定
+
+    判定机制（1d100）:
+    - 骰点=1: 大成功
+    - 骰点 < 能力值/5: 极难成功
+    - 骰点 < 能力值/2: 困难成功
+    - 骰点 < 能力值: 一般成功
+    - 骰点 > 能力值 且 <=95: 失败
+    - 骰点 96-100: 大失败
+
+    Args:
+        player: 玩家对象
+        ability: 属性名 ("INT", "SEN", "EDU", "STR", "SOC")
+        difficulty: 自定义难度（可选，如果不传则使用属性值）
+
+    Returns:
+        (result: str, roll: int)
+        result: CheckResult中的判定结果
+        roll: 骰点值(1-100)
+    """
+    # 获取属性值
+    ability_value = getattr(player, ability, 50)
+    if ability_value is None:
+        ability_value = 50
+
+    # 计算难度阈值
+    if difficulty is None:
+        difficulty = ability_value
+
+    # 投掷骰子
+    roll = random.randint(1, 100)
+
+    # 理智修正（理智越低，判定越难）
+    sanity_modifier = 1.0
+    if player.sanity < 30:
+        sanity_modifier = 0.6
+    elif player.sanity < 50:
+        sanity_modifier = 0.8
+
+    # 计算修正后的阈值
+    extreme_threshold = max(1, int(difficulty // 5 * sanity_modifier))
+    hard_threshold = max(1, int(difficulty // 2 * sanity_modifier))
+
+    # 判定
+    if roll == 1:
+        result = CheckResult.CRITICAL_SUCCESS
+    elif roll <= extreme_threshold:
+        result = CheckResult.EXTREME_SUCCESS
+    elif roll <= hard_threshold:
+        result = CheckResult.HARD_SUCCESS
+    elif roll < difficulty:
+        result = CheckResult.SUCCESS
+    elif roll <= 95:
+        result = CheckResult.FAILURE
+    else:
+        result = CheckResult.CRITICAL_FAILURE
+
+    return result, roll
+
+
+def generate_attributes() -> dict:
+    """生成玩家属性
+
+    每个属性1d100随机生成，单项≥10，总和≥300
+    """
+    while True:
+        attributes = {
+            "INT": random.randint(1, 100),  # 直觉
+            "SEN": random.randint(1, 100),  # 感知
+            "EDU": random.randint(1, 100),  # 知识
+            "STR": random.randint(1, 100),  # 耐力
+            "SOC": random.randint(1, 100),  # 社交
+        }
+
+        # 检查是否符合要求
+        if all(v >= 10 for v in attributes.values()) and sum(attributes.values()) >= 300:
+            return attributes
 
 
 class SemesterType(Enum):
@@ -40,12 +133,42 @@ class Player:
         self.action_points = 3  # 当前行动点
         self.max_action_points = 3  # 每周最大行动点
 
+        # ========== 新属性系统 (2026-03-27) ==========
+        # 新五维属性
+        attrs = generate_attributes()
+        self.INT = attrs["INT"]  # 直觉: 创新、应对挑战
+        self.SEN = attrs["SEN"]  # 感知: 操作精度、发现细节
+        self.EDU = attrs["EDU"]  # 知识: 研究效率、理解深度
+        self.STR = attrs["STR"]  # 耐力: 长时间活动、不消耗行动点
+        self.SOC = attrs["SOC"]  # 社交: 交流、获取资源
+
         # 核心数值
         self.sanity = 100  # 理智 (SAN)
-        self.knowledge = 10  # 知识值
-        self.inspiration = 10  # 灵感
         self.reputation = 0  # 学术声望
 
+        # 异变值（新增）
+        self.mutation = 0  # 异变程度，影响UI
+
+        # 继续工作触发次数限制
+        self.continue_action_count = 0  # STR>70时触发"继续工作"的次数
+        self.max_continue_actions = 10  # 每局最多触发次数
+
+        # 旧属性（兼容保留，后续移除）
+        """
+        self.knowledge = 10  # 旧知识
+        self.inspiration = 10  # 旧灵感
+        self.skills = {
+            "神话学": 0,
+            "密码学": 0,
+            "神秘生物学": 0,
+            "量子克苏鲁学": 0,
+            "田野调查": 0,
+            "说服": 0,
+            "拉莱亚语言": 0,
+            "文本解读": 0,
+            "形式科学": 0,
+        }
+        """
         # 选课相关
         self.courses_selected = False  # 是否已选课
         self.required_courses = []  # 必修课
@@ -57,19 +180,6 @@ class Player:
         self.current_paper = None  # 当前论文
         self.papers_published = 0  # 已发表论文数
 
-        # 技能
-        self.skills = {
-            "神话学": 0,
-            "密码学": 0,
-            "神秘生物学": 0,
-            "量子克苏鲁学": 0,
-            "田野调查": 0,
-            "说服": 0,
-            "拉莱亚语言": 0,  # 研一新增
-            "文本解读": 0,     # 研一新增
-            "形式科学": 0,     # 研一新增
-        }
-
         # 人际关系
         self.relationships = {
             "导师": 50,
@@ -79,6 +189,35 @@ class Player:
 
         # 状态
         self.status = []  # 当前状态（如：疯狂、神志清醒）
+
+    def get_attributes(self) -> dict:
+        """获取新五维属性"""
+        return {
+            "INT直觉": self.INT,
+            "SEN感知": self.SEN,
+            "EDU知识": self.EDU,
+            "STR耐力": self.STR,
+            "SOC社交": self.SOC,
+        }
+
+    @property
+    def mutation_level(self) -> str:
+        """异变等级描述"""
+        if self.mutation <= 0:
+            return "无异变"
+        elif self.mutation < 0.5:
+            return "轻微异变"
+        elif self.mutation < 1:
+            return "中度异变"
+        elif self.mutation < 2:
+            return "严重异变"
+        else:
+            return "极度危险"
+
+    @property
+    def is_mutated(self) -> bool:
+        """是否有异变"""
+        return self.mutation > 0
 
     @property
     def sanity_level(self) -> str:
@@ -117,9 +256,26 @@ class Player:
             return True
         return False
 
-    def change_sanity(self, amount: int):
-        """改变理智值"""
+    def change_sanity(self, amount: int, force_mutation: bool = False) -> bool:
+        """改变理智值
+
+        Args:
+            amount: 理智变化量（负数减少，正数恢复）
+            force_mutation: 是否强制触发异变（用于理智归零时）
+
+        Returns:
+            是否触发了异变（理智归零时返回True）
+        """
+        old_sanity = self.sanity
         self.sanity = max(0, min(100, self.sanity + amount))
+
+        # 理智从正数变为0：触发异变
+        if old_sanity > 0 and self.sanity == 0:
+            self.mutation += 1
+            self.sanity = 50  # 恢复一半理智
+            return True
+
+        return False
 
     def add_skill(self, skill_name: str, amount: int = 1):
         """增加技能经验"""
@@ -164,8 +320,12 @@ class Player:
             "行动点": f"{self.action_points}/{self.max_action_points}",
             "年龄": f"{self.age}岁",
             "理智": f"{self.sanity}/100 ({self.sanity_level})",
-            "知识": self.knowledge,
-            "灵感": self.inspiration,
+            "异变": f"{self.mutation:.2f} ({self.mutation_level})",
+            "INT直觉": self.INT,
+            "SEN感知": self.SEN,
+            "EDU知识": self.EDU,
+            "STR耐力": self.STR,
+            "SOC社交": self.SOC,
             "声望": self.reputation,
             "研究方向": self.research_direction.value if self.research_direction else "未选择",
             "已发表论文": self.papers_published,

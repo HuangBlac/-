@@ -1,0 +1,136 @@
+{
+  "events": [
+    {
+      "id": 201,
+      "title": "实验突破",
+      "description": "你的实验取得了重大突破，数据非常理想！",
+      "type": "academic",
+      "trigger_condition": "research",
+      "effect": {"progress": 20, "reputation": 3, "sanity": 5}
+    },
+    {
+      "id": 202,
+      "title": "实验失败",
+      "description": "实验结果与预期完全不符，你需要重新设计实验。",
+      "type": "academic",
+      "trigger_condition": "research",
+      "effect": {"progress": -10, "sanity": -5}
+    },
+    {
+      "id": 203,
+      "title": "灵感迸发",
+      "description": "在做实验时，你突然想到了一个绝妙的研究思路！",
+      "type": "academic",
+      "trigger_condition": "research",
+      "effect": {"inspiration": 5, "progress": 5}
+    },
+    {
+      "id": 204,
+      "title": "论文被拒",
+      "description": "你的论文被审稿人拒绝了，理由是'不够创新'。",
+      "type": "academic",
+      "trigger_condition": "submit",
+      "effect": {"sanity": -10, "progress": -15}
+    },
+    {
+      "id": 205,
+      "title": "论文接收",
+      "description": "恭喜！你的论文被接收了！",
+      "type": "academic",
+      "trigger_condition": "submit",
+      "effect": {"reputation": 15, "papers_published": 1, "sanity": 10}
+    },
+    {
+      "id": 206,
+      "title": "审稿意见",
+      "description": "审稿人给出了详细的修改意见，你需要修改论文。",
+      "type": "academic",
+      "trigger_condition": "submit",
+      "effect": {"progress": 10, "sanity": -3}
+    },
+    {
+      "id": 207,
+      "title": "文献发现",
+      "description": "你在文献中发现了一篇非常重要的论文，对你很有启发。",
+      "type": "academic",
+      "trigger_condition": "read",
+      "effect": {"knowledge": 2, "inspiration": 3}
+    },
+    {
+      "id": 208,
+      "title": "文献综述",
+      "description": "你完成了大量的文献阅读，对研究领域有了全面了解。",
+      "type": "academic",
+      "trigger_condition": "read",
+      "effect": {"knowledge": 3, "progress": 5}
+    },
+    {
+      "id": 209,
+      "title": "实验事故",
+      "description": "实验室发生了轻微事故，虽然没有人受伤，但你受到了惊吓。",
+      "type": "academic",
+      "trigger_condition": "research",
+      "effect": {"sanity": -8, "progress": -5}
+    },
+    {
+      "id": 210,
+      "title": "数据异常",
+      "description": "你发现实验数据出现了无法解释的异常，这可能意味着重大发现！",
+      "type": "academic",
+      "trigger_condition": "research",
+      "choices": [
+        {"id": "investigate", "text": "深入调查", "effect": {"progress": 15, "sanity": -10, "inspiration": 5}},
+        {"id": "ignore", "text": "忽略异常", "effect": {"progress": 5, "sanity": -2}}
+      ]
+    },
+    {
+      "id": 211,
+      "title": "学术交流",
+      "description": "你参加了一次学术交流活动，结识了其他学校的研究者。",
+      "type": "academic",
+      "trigger_condition": "normal",
+      "effect": {"reputation": 2, "inspiration": 2}
+    },
+    {
+      "id": 212,
+      "title": "设备故障",
+      "description": "实验设备突然故障，你不得不暂停实验。",
+      "type": "academic",
+      "trigger_condition": "research",
+      "effect": {"progress": -5, "sanity": -3}
+    },
+    {
+      "id": 213,
+      "title": "合作邀请",
+      "description": "其他实验室邀请你参与合作项目。",
+      "type": "academic",
+      "trigger_condition": "normal",
+      "choices": [
+        {"id": "accept", "text": "接受合作", "effect": {"progress": 10, "reputation": 5, "sanity": -5}},
+        {"id": "refuse", "text": "婉拒合作", "effect": {"reputation": -2}}
+      ]
+    },
+    {
+      "id": 214,
+      "title": "学术不端",
+      "description": "你发现有人涉嫌学术不端行为，你会怎么做？",
+      "type": "academic",
+      "trigger_condition": "normal",
+      "choices": [
+        {"id": "report", "text": "举报", "effect": {"reputation": 10, "sanity": -5}},
+        {"id": "ignore", "text": "假装没看到", "effect": {"reputation": -5, "sanity": -3}}
+      ]
+    },
+    {
+      "id": 215,
+      "title": "会议演讲",
+      "description": "你有机会在学术会议上演讲你的研究成果。",
+      "type": "academic",
+      "trigger_condition": "high_progress",
+      "choices": [
+        {"id": "accept", "text": "接受演讲", "effect": {"reputation": 10, "sanity": -8}},
+        {"id": "decline", "text": "拒绝演讲", "effect": {"reputation": -3}}
+      ]
+    }
+  ]
+}

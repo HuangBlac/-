@@ -3,7 +3,7 @@
 研究生模拟游戏 - 主入口
 """
 
-from game.core import GameCore
+from game.game_engine import GameCore
 from ui.console import ConsoleUI
 
 

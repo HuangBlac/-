@@ -1,0 +1,74 @@
+{
+  "events": [
+    {
+      "id": 701,
+      "title": "听音乐",
+      "description": "你戴上耳机，沉浸在音乐的世界里。",
+      "type": "entertainment",
+      "effect": {"sanity": 8}
+    },
+    {
+      "id": 702,
+      "title": "玩游戏",
+      "description": "你打了几把游戏，暂时忘记了研究的压力。",
+      "type": "entertainment",
+      "effect": {"sanity": 10, "progress": -5}
+    },
+    {
+      "id": 703,
+      "title": "打篮球",
+      "description": "你去球场打了一场篮球，挥洒汗水。",
+      "type": "entertainment",
+      "effect": {"sanity": 12, "STR": 1}
+    },
+    {
+      "id": 704,
+      "title": "看电影",
+      "description": "你看了部电影，度过了轻松的时光。",
+      "type": "entertainment",
+      "effect": {"sanity": 10}
+    },
+    {
+      "id": 705,
+      "title": "读书",
+      "description": "你读了一本课外书，放松身心。",
+      "type": "entertainment",
+      "effect": {"sanity": 6, "knowledge": 1}
+    },
+    {
+      "id": 706,
+      "title": "逛超市",
+      "description": "你去了趟超市，买了一些生活用品。",
+      "type": "entertainment",
+      "effect": {"sanity": 5}
+    },
+    {
+      "id": 707,
+      "title": "睡觉",
+      "description": "你睡了一整天，什么也不想。",
+      "type": "entertainment",
+      "effect": {"sanity": 15}
+    },
+    {
+      "id": 708,
+      "title": "跑步",
+      "description": "你围着校园跑了几圈，身体和心灵都得到了放松。",
+      "type": "entertainment",
+      "effect": {"sanity": 10, "STR": 1}
+    },
+    {
+      "id": 709,
+      "title": "社交媒体",
+      "description": "你刷了刷社交媒体，看看朋友们都在做什么。",
+      "type": "entertainment",
+      "effect": {"sanity": 5}
+    },
+    {
+      "id": 710,
+      "title": "喝茶",
+      "description": "你泡了杯茶，安静地坐着思考人生。",
+      "type": "entertainment",
+      "effect": {"sanity": 8}
+    }
+  ]
+}

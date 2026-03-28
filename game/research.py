@@ -209,6 +209,9 @@ class ResearchSystem:
         if not self.player.research_direction:
             return "请先选择研究方向！"
 
+        # 获取导师效率修正
+        efficiency_mod = self._get_efficiency_modifier()
+
         # ===== 第一步：感知判定决定阅读进度 =====
         current_progress = self.literature_progress
 
@@ -216,7 +219,7 @@ class ResearchSystem:
         check_result, roll = ability_check(self.player, "SEN")
         result_msg = [f"【阅读文献】判定结果: {check_result} (骰点:{roll})"]
 
-        # 根据判定结果计算进度
+        # 根据判定结果计算进度（应用导师效率修正）
         edu_bonus = 1 + self.player.EDU / 100
         sen_bonus = self.player.SEN / 10
 
@@ -227,11 +230,11 @@ class ResearchSystem:
         elif check_result in [CheckResult.EXTREME_SUCCESS, CheckResult.HARD_SUCCESS, CheckResult.SUCCESS]:
             # 成功：正常进度
             base_progress = 10 + sen_bonus
-            progress_gain = int(base_progress * edu_bonus)
+            progress_gain = int(base_progress * edu_bonus * efficiency_mod)
             result_msg.append("你仔细阅读这篇文章，收获颇丰。")
         elif check_result == CheckResult.FAILURE:
             # 失败：进度不良
-            progress_gain = int(10 * edu_bonus)
+            progress_gain = int(10 * edu_bonus * efficiency_mod)
             result_msg.append("你感觉这篇文章有些晦涩难懂，进度不良。")
         else:
             # 大失败：进度倒退
@@ -249,6 +252,18 @@ class ResearchSystem:
             result_msg.append(idea_result)
 
         return "\n".join(result_msg)
+
+    def _get_efficiency_modifier(self) -> float:
+        """获取导师科研效率修正"""
+        if self.player.advisor:
+            return self.player.advisor.efficiency_modifier
+        return 1.0
+
+    def _get_sanity_consumption_modifier(self) -> float:
+        """获取导师理智消耗修正"""
+        if self.player.advisor:
+            return self.player.advisor.sanity_consumption_modifier
+        return 1.0
 
     def _generate_idea_with_check(self) -> str:
         """生成idea（使用INT判定决定创新值）"""
@@ -345,12 +360,17 @@ class ResearchSystem:
         if idea.status != IdeaStatus.PRELIMINARY:
             return "只有初步想法才能进行实验！"
 
+        # 获取导师效率修正
+        efficiency_mod = self._get_efficiency_modifier()
+        sanity_mod = self._get_sanity_consumption_modifier()
+
         # 根据研究方向选择实验方法
         methods = EXPERIMENT_METHODS.get(self.player.research_direction, [])
         method_name, method_desc = random.choice(methods)
 
-        # 使用综合属性进行判定（取三者的平均值作为能力值）
+        # 使用综合属性进行判定（取三者的平均值作为能力值，应用效率修正）
         avg_ability = (self.player.INT + self.player.SEN + self.player.EDU) // 3
+        avg_ability = int(avg_ability * efficiency_mod)
         check_result, roll = ability_check(self.player, "INT", avg_ability)
 
         result_msg = [f"【实验验证】判定结果: {check_result} (骰点:{roll})"]
@@ -372,27 +392,28 @@ class ResearchSystem:
             san_change = 2
             self.player.change_sanity(san_change)
         elif check_result == CheckResult.SUCCESS:
-            # 一般成功：正常结果
+            # 一般成功：正常结果（应用导师效率修正）
             theory = random.randint(2, 4)
             experiment = random.randint(2, 4)
             depth = random.randint(2, 4)
+            # 进度增加
             result_msg.append("实验按预期进行，得到了有效结果。")
             san_change = 0
         elif check_result == CheckResult.FAILURE:
-            # 失败：结果质量低，可能损失
+            # 失败：结果质量低，可能损失理智（应用导师理智消耗修正）
             theory = random.randint(1, 2)
             experiment = random.randint(1, 2)
             depth = random.randint(1, 2)
-            san_loss = random.randint(3, 8)
+            san_loss = int(random.randint(3, 8) * sanity_mod)
             self.player.change_sanity(-san_loss)
             result_msg.append(f"实验结果不理想...理智-{san_loss}")
             san_change = 0
         else:
-            # 大失败：结果丢失，可能损失理智，异变+0.05
+            # 大失败：结果丢失，可能损失理智，异变+0.05（应用导师理智消耗修正）
             theory = 0
             experiment = 0
             depth = 0
-            san_loss = random.randint(8, 15)
+            san_loss = int(random.randint(8, 15) * sanity_mod)
             self.player.change_sanity(-san_loss)
             self.player.mutation += 0.05
             result_msg.append(f"实验完全失败，实验材料损毁...理智-{san_loss}")

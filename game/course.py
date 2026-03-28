@@ -1,5 +1,7 @@
-"""课程系统"""
+"""课程系统 - 从JSON加载课程数据"""
 import random
+import json
+import os
 from typing import List, Dict
 from .character import ResearchDirection, ability_check, CheckResult
 
@@ -23,90 +25,94 @@ class Course:
         return f"<Course: {self.name} ({self.course_type})>"
 
 
-# 必修课
-REQUIRED_COURSES = [
-    Course(
-        "拉莱亚语言初步",
-        "必修",
-        "学习古代克苏鲁语的基础知识",
-        {"EDU": 2, "SEN": 1}
-    ),
-    Course(
-        "神话文本阅读",
-        "必修",
-        "解读克苏鲁神话古籍",
-        {"EDU": 2, "SEN": 2}
-    ),
-    Course(
-        "形式科学导论",
-        "必修",
-        "数学、逻辑等形式科学基础",
-        {"EDU": 2, "INT": 2}
-    ),
-]
+def load_courses_from_json() -> tuple:
+    """从JSON文件加载课程数据
 
-# 选修课（隐藏课程"奈亚子伟大"除外）
-ELECTIVE_COURSES = [
-    Course(
-        "法术与召唤法阵",
-        "选修",
-        "学习绘制召唤法阵的基础知识",
-        {"INT": 2, "SEN": 1}
-    ),
-    Course(
-        "低理智生存技巧",
-        "选修",
-        "教授在理智值较低时的生存技能，一般会给高分避免课程对大家理智造成伤害",
-        {"STR": 3}
-    ),
-    Course(
-        "旧日支配者认知科学",
-        "选修",
-        "研究旧日支配者的心智影响",
-        {"INT": 2, "SEN": 1}
-    ),
-    Course(
-        "混血种族研究",
-        "选修",
-        "研究世界各地的神秘教派和混血种族",
-        {"SEN": 2, "SOC": 1}
-    ),
-    Course(
-        "神秘生物学",
-        "选修",
-        "研究神话生物的生理结构",
-        {"SEN": 3}
-    ),
-    Course(
-        "邪教信徒心理剖析",
-        "选修",
-        "分析邪教信徒的心理动机和行为模式",
-        {"SOC": 2, "INT": 1}
-    ),
-    Course(
-        "高级拉莱亚文本",
-        "选修",
-        "发表外星论文的必修内容",
-        {"EDU": 2, "SEN": 1}
-    ),
-    Course(
-        "深度学习与克苏鲁",
-        "选修",
-        "用一个不可名状的内容描述更不可名状的内容",
-        {"INT": 2, "EDU": 1}
-    ),
-]
+    Returns:
+        (required_courses, elective_courses, hidden_courses)
+    """
+    # 获取data目录路径
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    courses_file = os.path.join(base_path, 'data', 'courses.json')
 
-# 隐藏选修课（仅奈亚导师出现）
-HIDDEN_ELECTIVE_COURSES = [
-    Course(
-        "为什么奈亚提亚普是最伟大的神明",
-        "选修",
-        "我说奈亚提亚普是最伟大的神明你耳朵聋吗？",
-        {"INT": 1, "SEN": 1, "EDU": 1, "STR": 1},
-        hidden=True
-    ),
-]
+    try:
+        with open(courses_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # 加载必修课
+        required_courses = []
+        for c in data.get('required_courses', []):
+            course = Course(
+                name=c['name'],
+                course_type=c['type'],
+                description=c['description'],
+                attributes=c.get('attributes', {}),
+                credits=c.get('credits', 3),
+                hidden=c.get('hidden', False)
+            )
+            required_courses.append(course)
+
+        # 加载选修课
+        elective_courses = []
+        for c in data.get('elective_courses', []):
+            course = Course(
+                name=c['name'],
+                course_type=c['type'],
+                description=c['description'],
+                attributes=c.get('attributes', {}),
+                credits=c.get('credits', 3),
+                hidden=c.get('hidden', False)
+            )
+            elective_courses.append(course)
+
+        # 加载隐藏课程
+        hidden_courses = []
+        for c in data.get('hidden_courses', []):
+            course = Course(
+                name=c['name'],
+                course_type=c['type'],
+                description=c['description'],
+                attributes=c.get('attributes', {}),
+                credits=c.get('credits', 3),
+                hidden=c.get('hidden', True)
+            )
+            hidden_courses.append(course)
+
+        return required_courses, elective_courses, hidden_courses
+
+    except FileNotFoundError:
+        print(f"警告: 课程文件 {courses_file} 未找到，使用默认课程")
+        return _get_default_courses()
+    except json.JSONDecodeError:
+        print(f"警告: 课程文件 {courses_file} 解析失败，使用默认课程")
+        return _get_default_courses()
+
+
+def _get_default_courses() -> tuple:
+    """获取默认课程（当JSON加载失败时使用）"""
+    required = [
+        Course("拉莱亚语言初步", "必修", "学习古代克苏鲁语的基础知识", {"EDU": 2, "SEN": 1}),
+        Course("神话文本阅读", "必修", "解读克苏鲁神话古籍", {"EDU": 2, "SEN": 2}),
+        Course("形式科学导论", "必修", "数学、逻辑等形式科学基础", {"EDU": 2, "INT": 2}),
+    ]
+    elective = [
+        Course("法术与召唤法阵", "选修", "学习绘制召唤法阵的基础知识", {"INT": 2, "SEN": 1}),
+        Course("低理智生存技巧", "选修", "教授在理智值较低时的生存技能", {"STR": 3}),
+        Course("旧日支配者认知科学", "选修", "研究旧日支配者的心智影响", {"INT": 2, "SEN": 1}),
+        Course("混血种族研究", "选修", "研究世界各地的神秘教派和混血种族", {"SEN": 2, "SOC": 1}),
+        Course("神秘生物学", "选修", "研究神话生物的生理结构", {"SEN": 3}),
+        Course("邪教信徒心理剖析", "选修", "分析邪教信徒的心理动机和行为模式", {"SOC": 2, "INT": 1}),
+        Course("高级拉莱亚文本", "选修", "发表外星论文的必修内容", {"EDU": 2, "SEN": 1}),
+        Course("深度学习与克苏鲁", "选修", "用一个不可名状的内容描述更不可名状的内容", {"INT": 2, "EDU": 1}),
+    ]
+    hidden = [
+        Course("奈亚子伟大", "隐藏", "由奈亚提亚普导师亲自授课的终极课程", {"INT": 5, "SEN": 5, "EDU": 5}, hidden=True),
+    ]
+    return required, elective, hidden
+
+
+# 从JSON加载课程数据
+REQUIRED_COURSES, ELECTIVE_COURSES, HIDDEN_ELECTIVE_COURSES = load_courses_from_json()
 
 
 class CourseSystem:
@@ -117,6 +123,8 @@ class CourseSystem:
                                          dict(c.attributes), c.credits) for c in REQUIRED_COURSES]
         self.elective_courses = [Course(c.name, c.course_type, c.description,
                                           dict(c.attributes), c.credits) for c in ELECTIVE_COURSES]
+        self.hidden_courses = [Course(c.name, c.course_type, c.description,
+                                       dict(c.attributes), c.credits, c.hidden) for c in HIDDEN_ELECTIVE_COURSES]
         self.selected_electives: List[Course] = []
         self.first_semester_completed = False  # 第一学期是否完成
 

@@ -1,0 +1,36 @@
+{
+  "semesters": {
+    "SPRING": {"name": "上学期", "weeks": 8, "type": "term"},
+    "SUMMER": {"name": "暑假", "weeks": 4, "type": "holiday"},
+    "AUTUMN": {"name": "下学期", "weeks": 9, "type": "term"},
+    "WINTER": {"name": "寒假", "weeks": 2, "type": "holiday"}
+  },
+  "game": {
+    "final_week_threshold": 0.75,
+    "max_years": 3,
+    "research_start_year": 2,
+    "graduation_start_year": 3,
+    "min_papers_for_graduation": 1
+  },
+  "attributes": {
+    "min_value": 10,
+    "min_sum": 300,
+    "max_value": 100
+  },
+  "sanity": {
+    "max": 100,
+    "low_threshold": 50,
+    "very_low_threshold": 30,
+    "mutation_threshold": 2
+  },
+  "mutation": {
+    "on_zero_sanity": 1,
+    "on_critical_failure": 0.05,
+    "sanity_loss_per_turn": 5
+  },
+  "debug": {
+    "event_trigger_chance": 0.3,
+    "str_continue_work_threshold": 70,
+    "str_continue_work_max": 10
+  }
+}

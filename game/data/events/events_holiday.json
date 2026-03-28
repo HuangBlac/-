@@ -1,0 +1,127 @@
+{
+  "events": [
+    {
+      "id": 601,
+      "title": "假期休息",
+      "description": "你好好休息了一周，恢复了精神。",
+      "type": "holiday",
+      "trigger_condition": "always",
+      "effect": {"sanity": 15}
+    },
+    {
+      "id": 602,
+      "title": "旅游",
+      "description": "你利用假期去旅游，放松身心。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"sanity": 20, "reputation": 2}
+    },
+    {
+      "id": 603,
+      "title": "兼职",
+      "description": "你在假期做兼职，赚点生活费。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"reputation": 3, "progress": 5}
+    },
+    {
+      "id": 604,
+      "title": "学习",
+      "description": "你利用假期学习新知识，为下学期做准备。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"knowledge": 5, "progress": 5}
+    },
+    {
+      "id": 605,
+      "title": "返乡",
+      "description": "你回家探亲，和家人团聚。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"sanity": 25}
+    },
+    {
+      "id": 606,
+      "title": "导师召唤",
+      "description": "假期期间，导师突然召见你，有紧急任务。",
+      "type": "holiday",
+      "trigger_condition": "high_pressure",
+      "effect": {"sanity": -10, "progress": 10}
+    },
+    {
+      "id": 607,
+      "title": "独自实验",
+      "description": "你决定假期留在学校继续做实验。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"progress": 15, "sanity": -5}
+    },
+    {
+      "id": 608,
+      "title": "图书馆之旅",
+      "description": "你去图书馆借阅书籍，度过了一个充实的假期。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"knowledge": 8, "inspiration": 5}
+    },
+    {
+      "id": 609,
+      "title": "社交活动",
+      "description": "你参加了一些社交活动，结识了新朋友。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"reputation": 5, "sanity": 10}
+    },
+    {
+      "id": 610,
+      "title": "健康检查",
+      "description": "你去做了一次全面体检，身体状况良好。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"sanity": 8}
+    },
+    {
+      "id": 611,
+      "title": "阅读",
+      "description": "你读了一些课外书，拓展了视野。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"knowledge": 4, "inspiration": 4}
+    },
+    {
+      "id": 612,
+      "title": "锻炼",
+      "description": "你坚持锻炼，身体状态更好了。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"sanity": 12}
+    },
+    {
+      "id": 613,
+      "title": "游戏",
+      "description": "你打了几天游戏，好好放松了一下。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"sanity": 18}
+    },
+    {
+      "id": 614,
+      "title": "志愿者",
+      "description": "你参加了志愿者活动，帮助他人让你感到快乐。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {"reputation": 8, "sanity": 10}
+    },
+    {
+      "id": 615,
+      "title": "神秘体验",
+      "description": "假期里你遇到了一些难以解释的事情...",
+      "type": "holiday",
+      "trigger_condition": "rare",
+      "choices": [
+        {"id": "investigate", "text": "调查", "effect": {"knowledge": 10, "sanity": -15, "inspiration": 10}},
+        {"id": "ignore", "text": "忽略", "effect": {"sanity": -5}}
+      ]
+    }
+  ]
+}

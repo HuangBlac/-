@@ -1,0 +1,137 @@
+{
+  "events": [
+    {
+      "id": 401,
+      "title": "同门交流",
+      "description": "你与同门讨论学术问题，收获不少。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"knowledge": 1, "sanity": 3}
+    },
+    {
+      "id": 402,
+      "title": "实验室聚会",
+      "description": "实验室举办了聚会，你参加了并认识了新朋友。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"reputation": 2, "sanity": 5}
+    },
+    {
+      "id": 403,
+      "title": "孤立",
+      "description": "你感觉与同门格格不入，好像被孤立了。",
+      "type": "social",
+      "trigger_condition": "low_reputation",
+      "effect": {"sanity": -5}
+    },
+    {
+      "id": 404,
+      "title": "学术八卦",
+      "description": "你听到了一些学术界的有趣八卦。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"inspiration": 2}
+    },
+    {
+      "id": 405,
+      "title": "竞争者",
+      "description": "你发现有一个同期在和你做类似的研究，可能成为竞争者。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "choices": [
+        {"id": "collaborate", "text": "尝试合作", "effect": {"progress": 10, "reputation": 5}},
+        {"id": "compete", "text": "公平竞争", "effect": {"progress": 5, "sanity": -3}},
+        {"id": "sabotage", "text": "暗中阻挠", "effect": {"reputation": -10, "sanity": -5}}
+      ]
+    },
+    {
+      "id": 406,
+      "title": "前辈指导",
+      "description": "一位热心的前辈指导你如何写论文。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"knowledge": 3, "progress": 5}
+    },
+    {
+      "id": 407,
+      "title": "表白",
+      "description": "有人向你表白，但你的心思都在研究上...",
+      "type": "social",
+      "trigger_condition": "normal",
+      "choices": [
+        {"id": "accept", "text": "接受", "effect": {"sanity": 10, "progress": -5}},
+        {"id": "reject", "text": "拒绝", "effect": {"sanity": -5}},
+        {"id": "delay", "text": "暂时不考虑", "effect": {"sanity": -2}}
+      ]
+    },
+    {
+      "id": 408,
+      "title": "家庭来电",
+      "description": "家人打电话关心你的近况。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"sanity": 5}
+    },
+    {
+      "id": 409,
+      "title": "室友矛盾",
+      "description": "你和室友因为生活习惯产生了矛盾。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "choices": [
+        {"id": "talk", "text": "沟通解决", "effect": {"sanity": 3}},
+        {"id": "avoid", "text": "尽量少待宿舍", "effect": {"sanity": -3, "progress": 5}},
+        {"id": "move", "text": "申请换宿舍", "effect": {"reputation": -2, "sanity": 5}}
+      ]
+    },
+    {
+      "id": 410,
+      "title": "朋友背叛",
+      "description": "你发现一个朋友在背后说你坏话。",
+      "type": "social",
+      "trigger_condition": "rare",
+      "effect": {"sanity": -10, "reputation": -3}
+    },
+    {
+      "id": 411,
+      "title": "新朋友",
+      "description": "你认识了一个志同道合的新朋友。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"reputation": 3, "inspiration": 3, "sanity": 5}
+    },
+    {
+      "id": 412,
+      "title": "社团活动",
+      "description": "你参加了学校的社团活动，放松了一下。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"sanity": 8, "reputation": 1}
+    },
+    {
+      "id": 413,
+      "title": "心理咨询",
+      "description": "你去找心理咨询师倾诉，获得了一些安慰。",
+      "type": "social",
+      "trigger_condition": "low_sanity",
+      "effect": {"sanity": 15},
+      "requirement": {"sanity": 40}
+    },
+    {
+      "id": 414,
+      "title": "社交媒体",
+      "description": "你在社交媒体上看到一些有趣的研究讨论。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"inspiration": 2}
+    },
+    {
+      "id": 415,
+      "title": "孤独",
+      "description": "你独自一人在实验室工作，感到有些孤独。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {"sanity": -3}
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "required_courses": [
+    {
+      "name": "拉莱亚语言初步",
+      "type": "必修",
+      "description": "学习古代克苏鲁语的基础知识",
+      "attributes": {"EDU": 2, "SEN": 1},
+      "credits": 3
+    },
+    {
+      "name": "神话文本阅读",
+      "type": "必修",
+      "description": "解读克苏鲁神话古籍",
+      "attributes": {"EDU": 2, "SEN": 2},
+      "credits": 3
+    },
+    {
+      "name": "形式科学导论",
+      "type": "必修",
+      "description": "数学、逻辑等形式科学基础",
+      "attributes": {"EDU": 2, "INT": 2},
+      "credits": 3
+    }
+  ],
+  "elective_courses": [
+    {
+      "name": "法术与召唤法阵",
+      "type": "选修",
+      "description": "学习绘制召唤法阵的基础知识",
+      "attributes": {"INT": 2, "SEN": 1},
+      "credits": 3
+    },
+    {
+      "name": "低理智生存技巧",
+      "type": "选修",
+      "description": "教授在理智值较低时的生存技能，一般会给高分避免课程对大家理智造成伤害",
+      "attributes": {"STR": 3},
+      "credits": 2
+    },
+    {
+      "name": "旧日支配者认知科学",
+      "type": "选修",
+      "description": "研究旧日支配者的心智影响",
+      "attributes": {"INT": 2, "SEN": 1},
+      "credits": 3
+    },
+    {
+      "name": "混血种族研究",
+      "type": "选修",
+      "description": "研究世界各地的神秘教派和混血种族",
+      "attributes": {"SEN": 2, "SOC": 1},
+      "credits": 2
+    },
+    {
+      "name": "神秘生物学",
+      "type": "选修",
+      "description": "研究神话生物的生理结构",
+      "attributes": {"SEN": 3},
+      "credits": 2
+    },
+    {
+      "name": "邪教信徒心理剖析",
+      "type": "选修",
+      "description": "分析邪教信徒的心理动机和行为模式",
+      "attributes": {"SOC": 2, "INT": 1},
+      "credits": 3
+    },
+    {
+      "name": "高级拉莱亚文本",
+      "type": "选修",
+      "description": "发表外星论文的必修内容",
+      "attributes": {"EDU": 2, "SEN": 1},
+      "credits": 3
+    },
+    {
+      "name": "深度学习与克苏鲁",
+      "type": "选修",
+      "description": "用一个不可名状的内容描述更不可名状的内容",
+      "attributes": {"INT": 2, "EDU": 1},
+      "credits": 3
+    }
+  ],
+  "hidden_courses": [
+    {
+      "name": "奈亚子伟大",
+      "type": "隐藏",
+      "description": "由奈亚提亚普导师亲自授课的终极课程",
+      "attributes": {"INT": 5, "SEN": 5, "EDU": 5},
+      "credits": 5,
+      "hidden": true
+    }
+  ]
+}

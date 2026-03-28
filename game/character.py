@@ -153,22 +153,14 @@ class Player:
         self.continue_action_count = 0  # STR>70时触发"继续工作"的次数
         self.max_continue_actions = 10  # 每局最多触发次数
 
-        # 旧属性（兼容保留，后续移除）
-        """
-        self.knowledge = 10  # 旧知识
-        self.inspiration = 10  # 旧灵感
-        self.skills = {
-            "神话学": 0,
-            "密码学": 0,
-            "神秘生物学": 0,
-            "量子克苏鲁学": 0,
-            "田野调查": 0,
-            "说服": 0,
-            "拉莱亚语言": 0,
-            "文本解读": 0,
-            "形式科学": 0,
-        }
-        """
+        # 旧属性（兼容保留）
+        self.knowledge = 10  # 知识（用于部分事件判定）
+        self.inspiration = 10  # 灵感（用于部分事件判定）
+
+        # 导师相关（研一自动分配）
+        self.advisor = None  # 导师对象
+        self.advisor_assigned = False  # 是否已分配导师
+        self.graduation_required_papers = 1  # 毕业所需论文数
         # 选课相关
         self.courses_selected = False  # 是否已选课
         self.required_courses = []  # 必修课
@@ -312,7 +304,7 @@ class Player:
 
     def get_status(self) -> dict:
         """获取当前状态"""
-        return {
+        status = {
             "姓名": self.name,
             "年级": self.year_name,
             "学期": self.semester_name,
@@ -329,7 +321,16 @@ class Player:
             "声望": self.reputation,
             "研究方向": self.research_direction.value if self.research_direction else "未选择",
             "已发表论文": self.papers_published,
+            "毕业要求": f"{self.graduation_required_papers}篇",
         }
+
+        # 添加导师信息
+        if self.advisor:
+            status["导师"] = f"{self.advisor.name}（{self.advisor.race.value}）"
+            status["导师能力"] = self.advisor.display_ability
+            status["导师性格"] = self.advisor.personality.value
+
+        return status
 
     def is_alive(self) -> bool:
         """是否还活着"""

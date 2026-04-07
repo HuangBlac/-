@@ -21,3 +21,7 @@ Thumbs.db
 # Game
 *.sav
 save/
+
+# Claude Code & Development Docs
+CLAUDE.md
+docs/

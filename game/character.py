@@ -269,11 +269,6 @@ class Player:
 
         return False
 
-    def add_skill(self, skill_name: str, amount: int = 1):
-        """增加技能经验"""
-        if skill_name in self.skills:
-            self.skills[skill_name] += amount
-
     def advance_week(self):
         """推进一周（每学期内推进）"""
         self.week_in_semester += 1

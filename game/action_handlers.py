@@ -1,4 +1,5 @@
 """行动处理器基类和工厂"""
+import random
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -101,7 +102,6 @@ class CourseActionHandler(ActionHandler):
 
     def _do_class(self) -> str:
         """上课"""
-        import random
 
         active_courses = self.game.course_system.get_active_courses()
 
@@ -180,7 +180,6 @@ class CourseActionHandler(ActionHandler):
 
     def _trigger_advisor_holiday_task(self) -> str:
         """触发导师假期任务"""
-        import random
 
         holiday_tasks = [
             ("导师让你假期来取快递", -3, 5),
@@ -266,7 +265,6 @@ class EntertainmentActionHandler(ActionHandler):
 
     def _do_entertainment(self, action: str) -> str:
         """执行娱乐活动"""
-        import random
         from .character import SemesterType
 
         is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
@@ -302,7 +300,6 @@ class EntertainmentActionHandler(ActionHandler):
 
     def _trigger_holiday_task(self) -> str:
         """触发假期导师任务"""
-        import random
 
         tasks = [
             "导师在假期给你安排了任务",
@@ -320,6 +317,41 @@ class EntertainmentActionHandler(ActionHandler):
         return f"【{task}】\n理智-{san_loss}，研究进度+{progress}\n这个假期没法好好休息了..."
 
 
+class InvestigationActionHandler(ActionHandler):
+    """调查行动处理器"""
+
+    def handle(self, action: str) -> str:
+        return self._do_investigation()
+
+    def get_available_actions(self) -> list:
+        return [
+            ("6", "调查", "参与神秘调查"),
+        ]
+
+    def _do_investigation(self) -> str:
+        """调查 - 从事件库中随机触发"""
+
+        # TODO: 从 events_investigation.json 加载事件
+        # 临时逻辑
+        san_loss = random.randint(3, 8)
+        int_gain = random.randint(3, 8)
+        reputation_gain = random.randint(1, 5)
+
+        self.player.change_sanity(-san_loss)
+        self.player.INT += int_gain
+        self.player.reputation += reputation_gain
+
+        events = [
+            "你在图书馆发现了一本禁书",
+            "你参加了校外的神秘聚会",
+            "你跟踪了一个可疑的邪教成员",
+            "你在实验室发现了奇怪的实验结果",
+        ]
+        event_desc = random.choice(events)
+
+        return f"{event_desc}\nINT+{int_gain}，声望+{reputation_gain}，理智-{san_loss}"
+
+
 class SocialActionHandler(ActionHandler):
     """社交行动处理器"""
 
@@ -328,14 +360,14 @@ class SocialActionHandler(ActionHandler):
 
     def get_available_actions(self) -> list:
         return [
-            ("6", "调查", "参与神秘调查"),
             ("7", "社交", "与NPC交流"),
         ]
 
     def _do_social(self) -> str:
-        """社交"""
-        import random
+        """社交 - 从事件库中随机触发"""
 
+        # TODO: 从 events_social.json 加载事件
+        # 临时逻辑
         targets = ["导师", "同门", "同门1", "同门2"]
         target = random.choice(targets)
 
@@ -348,28 +380,6 @@ class SocialActionHandler(ActionHandler):
         self.player.change_sanity(san_change)
 
         return f"你与{target}交流了一下\n好感度变化: {favor_change:+d}，理智{san_change:+d}"
-
-    def _do_investigation(self) -> str:
-        """调查"""
-        import random
-
-        san_loss = random.randint(3, 8)
-        inspiration_gain = random.randint(3, 8)
-        reputation_gain = random.randint(1, 5)
-
-        self.player.change_sanity(-san_loss)
-        self.player.inspiration += inspiration_gain
-        self.player.reputation += reputation_gain
-
-        events = [
-            "你在图书馆发现了一本禁书",
-            "你参加了校外的神秘聚会",
-            "你跟踪了一个可疑的邪教成员",
-            "你在实验室发现了奇怪的实验结果",
-        ]
-        event_desc = random.choice(events)
-
-        return f"{event_desc}\n灵感+{inspiration_gain}，声望+{reputation_gain}，理智-{san_loss}"
 
 
 class GraduationActionHandler(ActionHandler):
@@ -387,8 +397,31 @@ class GraduationActionHandler(ActionHandler):
 
     def _do_graduation(self) -> str:
         if self.game.graduation_thesis.stage.value == "未开始":
-            return "请先输入毕业论文题目。\n（当前系统需要手动输入题目）"
+            title = self._generate_thesis_title()
+            return self.game.graduation_thesis.start_thesis(title)
         return self.game.graduation_thesis.work_on_thesis()
+
+    def _generate_thesis_title(self) -> str:
+        """从JSON中按研究方向随机选取毕业论文题目"""
+        import json, os
+        from .character import ResearchDirection
+
+        data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'thesis_titles.json')
+        try:
+            with open(data_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return "克苏鲁神话相关研究"
+
+        direction_map = {
+            ResearchDirection.ARCANE_ANALYSIS: "arcane_analysis",
+            ResearchDirection.MYTHOS_RITUAL: "mythos_ritual",
+            ResearchDirection.DEITY_RACE: "deity_race",
+            ResearchDirection.OUTER_GOD: "outer_god",
+        }
+        key = direction_map.get(self.player.research_direction, "default")
+        titles = data["titles"].get(key, data["titles"]["default"])
+        return random.choice(titles)
 
 
 # 行动处理器工厂
@@ -399,6 +432,7 @@ class ActionHandlerFactory:
         "course": CourseActionHandler,
         "research": ResearchActionHandler,
         "entertainment": EntertainmentActionHandler,
+        "investigation": InvestigationActionHandler,
         "social": SocialActionHandler,
         "graduation": GraduationActionHandler,
     }

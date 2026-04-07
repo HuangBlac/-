@@ -325,20 +325,20 @@ class ResearchSystem:
         idea = self.ideas[idea_index]
 
         if decision == "discard":
-            # 丢弃，增加能力值
+            # 丢弃，随机提升一个学术属性
             ability_gain = random.randint(1, 3)
-            skill = random.choice(list(self.player.skills.keys()))
-            self.player.skills[skill] += ability_gain
+            attr = random.choice(["INT", "SEN", "EDU"])
+            setattr(self.player, attr, getattr(self.player, attr) + ability_gain)
             self.ideas.remove(idea)
-            return f"你放弃了这个idea。\n+{ability_gain} {skill}"
+            return f"你放弃了这个idea。\n{attr}+{ability_gain}"
 
         elif decision == "improve":
-            # 有待改进，进度重置，增加能力
+            # 有待改进，进度重置，随机提升一个学术属性
             idea.progress = 0
             ability_gain = random.randint(1, 2)
-            skill = random.choice(list(self.player.skills.keys()))
-            self.player.skills[skill] += ability_gain
-            return f"idea需要改进。\n+{ability_gain} {skill}，请继续研究"
+            attr = random.choice(["INT", "SEN", "EDU"])
+            setattr(self.player, attr, getattr(self.player, attr) + ability_gain)
+            return f"idea需要改进。\n{attr}+{ability_gain}，请继续研究"
 
         elif decision == "accept":
             # 接受为初步想法
@@ -453,7 +453,7 @@ class ResearchSystem:
             self.current_paper = Paper(mature_ideas[:3])
 
         # 增加初稿进度
-        writing_speed = random.randint(5, 15) + self.player.knowledge // 10
+        writing_speed = random.randint(5, 15) + self.player.EDU // 10
         self.current_paper.draft_progress = min(100,
             self.current_paper.draft_progress + writing_speed)
 

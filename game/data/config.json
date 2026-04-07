@@ -29,6 +29,7 @@
     "sanity_loss_per_turn": 5
   },
   "debug": {
+    "enabled": false,
     "event_trigger_chance": 0.3,
     "str_continue_work_threshold": 70,
     "str_continue_work_max": 10

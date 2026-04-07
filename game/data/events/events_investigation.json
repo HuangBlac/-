@@ -6,7 +6,7 @@
       "description": "你在图书馆进行田野调查，发现了一些有趣的东西。",
       "type": "investigation",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 3, "inspiration": 3, "sanity": -3}
+      "effect": {"EDU": 3, "INT": 3, "sanity": -3}
     },
     {
       "id": 502,
@@ -15,8 +15,8 @@
       "type": "investigation",
       "trigger_condition": "normal",
       "choices": [
-        {"id": "enter", "text": "进入探索", "effect": {"knowledge": 8, "sanity": -15, "inspiration": 10}},
-        {"id": "observe", "text": "远距离观察", "effect": {"knowledge": 4, "sanity": -5}},
+        {"id": "enter", "text": "进入探索", "effect": {"EDU": 8, "sanity": -15, "INT": 10}},
+        {"id": "observe", "text": "远距离观察", "effect": {"EDU": 4, "sanity": -5}},
         {"id": "leave", "text": "离开", "effect": {"sanity": 2}}
       ]
     },
@@ -26,7 +26,7 @@
       "description": "你采访了一个自称见过'那个东西'的老人。",
       "type": "investigation",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 5, "inspiration": 5, "sanity": -8}
+      "effect": {"EDU": 5, "INT": 5, "sanity": -8}
     },
     {
       "id": 504,
@@ -35,8 +35,8 @@
       "type": "investigation",
       "trigger_condition": "normal",
       "choices": [
-        {"id": "continue", "text": "继续深入", "effect": {"knowledge": 10, "sanity": -20, "inspiration": 15}},
-        {"id": "stop", "text": "停止调查", "effect": {"knowledge": 3, "sanity": -3}}
+        {"id": "continue", "text": "继续深入", "effect": {"EDU": 10, "sanity": -20, "INT": 15}},
+        {"id": "stop", "text": "停止调查", "effect": {"EDU": 3, "sanity": -3}}
       ]
     },
     {
@@ -45,7 +45,7 @@
       "description": "你收集到了一些神秘的样本，需要带回实验室分析。",
       "type": "investigation",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 5, "progress": 8}
+      "effect": {"EDU": 5, "progress": 8}
     },
     {
       "id": 506,
@@ -56,7 +56,7 @@
       "choices": [
         {"id": "fight", "text": "反抗", "effect": {"sanity": -15, "reputation": 5}},
         {"id": "flee", "text": "逃跑", "effect": {"sanity": -10}},
-        {"id": "negotiate", "text": "谈判", "effect": {"knowledge": 8, "sanity": -8}}
+        {"id": "negotiate", "text": "谈判", "effect": {"EDU": 8, "sanity": -8}}
       ]
     },
     {
@@ -66,9 +66,9 @@
       "type": "investigation",
       "trigger_condition": "rare",
       "choices": [
-        {"id": "study", "text": "进行研究", "effect": {"knowledge": 15, "sanity": -15}},
-        {"id": "integrate", "text": "融入生活", "effect": {"sanity": 10, "knowledge": 5}},
-        {"id": "leave", "text": "离开", "effect": {"knowledge": 3, "sanity": -5}}
+        {"id": "study", "text": "进行研究", "effect": {"EDU": 15, "sanity": -15}},
+        {"id": "integrate", "text": "融入生活", "effect": {"sanity": 10, "EDU": 5}},
+        {"id": "leave", "text": "离开", "effect": {"EDU": 3, "sanity": -5}}
       ]
     },
     {
@@ -77,7 +77,7 @@
       "description": "你找到了一份珍贵的古代文献。",
       "type": "investigation",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 8, "sanity": -10}
+      "effect": {"EDU": 8, "sanity": -10}
     },
     {
       "id": 509,
@@ -85,7 +85,7 @@
       "description": "有人声称目击到了异常现象，你决定调查。",
       "type": "investigation",
       "trigger_condition": "normal",
-      "effect": {"inspiration": 5, "sanity": -5}
+      "effect": {"INT": 5, "sanity": -5}
     },
     {
       "id": 510,
@@ -94,8 +94,8 @@
       "type": "investigation",
       "trigger_condition": "normal",
       "choices": [
-        {"id": "explore", "text": "进去探险", "effect": {"inspiration": 8, "sanity": -12}},
-        {"id": "research", "text": "查资料", "effect": {"knowledge": 5, "sanity": -3}},
+        {"id": "explore", "text": "进去探险", "effect": {"INT": 8, "sanity": -12}},
+        {"id": "research", "text": "查资料", "effect": {"EDU": 5, "sanity": -3}},
         {"id": "ignore", "text": "不感兴趣", "effect": {"sanity": 2}}
       ]
     },
@@ -106,8 +106,8 @@
       "type": "investigation",
       "trigger_condition": "rare",
       "choices": [
-        {"id": "observe", "text": "观察", "effect": {"knowledge": 10, "sanity": -15}},
-        {"id": "join", "text": "加入", "effect": {"sanity": -25, "mutation": 0.1, "inspiration": 20}},
+        {"id": "observe", "text": "观察", "effect": {"EDU": 10, "sanity": -15}},
+        {"id": "join", "text": "加入", "effect": {"sanity": -25, "mutation": 0.1, "INT": 20}},
         {"id": "disrupt", "text": "打断", "effect": {"reputation": 8, "sanity": -10}}
       ]
     },
@@ -117,7 +117,7 @@
       "description": "你参与了一个考古项目，发现了令人震惊的东西。",
       "type": "investigation",
       "trigger_condition": "rare",
-      "effect": {"knowledge": 12, "sanity": -18}
+      "effect": {"EDU": 12, "sanity": -18}
     },
     {
       "id": 513,
@@ -125,7 +125,7 @@
       "description": "你决定夜间进行调查，希望能发现白天看不到的东西。",
       "type": "investigation",
       "trigger_condition": "normal",
-      "effect": {"inspiration": 6, "sanity": -8}
+      "effect": {"INT": 6, "sanity": -8}
     },
     {
       "id": 514,
@@ -134,7 +134,7 @@
       "type": "investigation",
       "trigger_condition": "rare",
       "choices": [
-        {"id": "infiltrate", "text": "潜入", "effect": {"knowledge": 15, "sanity": -20, "reputation": 10}},
+        {"id": "infiltrate", "text": "潜入", "effect": {"EDU": 15, "sanity": -20, "reputation": 10}},
         {"id": "expose", "text": "揭发", "effect": {"reputation": 15, "sanity": -10}},
         {"id": "ignore", "text": "不管", "effect": {"sanity": -3}}
       ]
@@ -145,7 +145,7 @@
       "description": "你的调查取得了重大进展！",
       "type": "investigation",
       "trigger_condition": "high_progress",
-      "effect": {"knowledge": 8, "reputation": 8, "inspiration": 10}
+      "effect": {"EDU": 8, "reputation": 8, "INT": 10}
     }
   ]
 }

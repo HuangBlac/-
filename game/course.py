@@ -32,7 +32,7 @@ def load_courses_from_json() -> tuple:
         (required_courses, elective_courses, hidden_courses)
     """
     # 获取data目录路径
-    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    base_path = os.path.dirname(os.path.abspath(__file__))
     courses_file = os.path.join(base_path, 'data', 'courses.json')
 
     try:

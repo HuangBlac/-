@@ -52,7 +52,7 @@
       "type": "advisor_task",
       "task_type": "ta_work",
       "action_cost": 2,
-      "effect": {"knowledge": 2, "sanity": -8, "reputation": 3}
+      "effect": {"EDU": 2, "sanity": -8, "reputation": 3}
     },
     {
       "id": 807,

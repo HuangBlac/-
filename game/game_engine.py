@@ -1,5 +1,7 @@
 """游戏引擎 - 核心游戏控制器"""
 import random
+import json
+import os
 
 from .character import Player, NPC, SemesterType
 from .event_system import EventSystem
@@ -16,6 +18,10 @@ class GameEngine:
     """游戏核心引擎"""
 
     def __init__(self, player_name: str):
+        # 加载配置
+        self.config = self._load_config()
+        self.debug_mode = self.config.get("debug", {}).get("enabled", False)
+
         # 玩家
         self.player = Player(player_name)
 
@@ -61,6 +67,15 @@ class GameEngine:
             "同门1": NPC("张同学", "同门", "热衷于古代文本研究的同学"),
             "同门2": NPC("李同学", "同门", "相信科学的研究生"),
         }
+
+    def _load_config(self) -> dict:
+        """加载游戏配置"""
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'config.json')
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {"debug": {"enabled": False}}
 
     # ========== 日志系统 ==========
     def log(self, message: str):
@@ -118,15 +133,6 @@ class GameEngine:
             p(f"导师: {status['导师']} | 能力: {status['导师能力']} | 性格: {status['导师性格']}")
         p("-" * 30)
 
-    def display_skills(self):
-        """显示技能"""
-        print("【技能】")
-        # 显示旧技能系统（兼容）
-        if hasattr(self.player, 'skills'):
-            for skill, level in self.player.skills.items():
-                print(f"  {skill}: {level}")
-        print("")
-
     # ========== 行动执行 ==========
     def do_action(self, action: str) -> bool:
         """执行行动
@@ -151,7 +157,6 @@ class GameEngine:
         # 查看状态
         if action == "0":
             self.display_status()
-            self.display_skills()
             self.log(self.research_system.get_idea_status())
             return False
 
@@ -312,9 +317,13 @@ class GameEngine:
     def get_actions(self) -> list:
         """获取可选行动"""
         actions = self.action_system.get_actions()
-        actions.append(("A", "快进", "[DEBUG] 时间快进一周"))
-        actions.append(("B", "跳转研二", "[DEBUG] 快速跳转到研二测试小论文"))
-        actions.append(("M", "异变+1", "[DEBUG] 测试异变效果"))
+
+        # Debug行动（仅在debug模式下显示）
+        if self.debug_mode:
+            actions.append(("A", "快进", "[DEBUG] 时间快进一周"))
+            actions.append(("B", "跳转研二", "[DEBUG] 快速跳转到研二测试小论文"))
+            actions.append(("M", "异变+1", "[DEBUG] 测试异变效果"))
+
         actions.append(("q", "退出", "结束游戏"))
         return actions
 

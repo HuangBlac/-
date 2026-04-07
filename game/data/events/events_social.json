@@ -6,7 +6,7 @@
       "description": "你与同门讨论学术问题，收获不少。",
       "type": "social",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 1, "sanity": 3}
+      "effect": {"EDU": 1, "sanity": 3}
     },
     {
       "id": 402,
@@ -30,7 +30,7 @@
       "description": "你听到了一些学术界的有趣八卦。",
       "type": "social",
       "trigger_condition": "normal",
-      "effect": {"inspiration": 2}
+      "effect": {"INT": 2}
     },
     {
       "id": 405,
@@ -50,7 +50,7 @@
       "description": "一位热心的前辈指导你如何写论文。",
       "type": "social",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 3, "progress": 5}
+      "effect": {"EDU": 3, "progress": 5}
     },
     {
       "id": 407,
@@ -98,7 +98,7 @@
       "description": "你认识了一个志同道合的新朋友。",
       "type": "social",
       "trigger_condition": "normal",
-      "effect": {"reputation": 3, "inspiration": 3, "sanity": 5}
+      "effect": {"reputation": 3, "INT": 3, "sanity": 5}
     },
     {
       "id": 412,
@@ -123,7 +123,7 @@
       "description": "你在社交媒体上看到一些有趣的研究讨论。",
       "type": "social",
       "trigger_condition": "normal",
-      "effect": {"inspiration": 2}
+      "effect": {"INT": 2}
     },
     {
       "id": 415,

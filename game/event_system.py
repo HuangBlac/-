@@ -15,7 +15,7 @@ class EventSystem:
     def _load_events(self):
         """从JSON文件加载事件"""
         # 获取data/events目录路径
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        base_path = os.path.dirname(os.path.abspath(__file__))
         events_dir = os.path.join(base_path, 'data', 'events')
 
         # 事件文件映射
@@ -80,7 +80,15 @@ class EventSystem:
             if req:
                 if 'reputation' in req and player.reputation < req['reputation']:
                     continue
-                if 'knowledge' in req and player.knowledge < req['knowledge']:
+                if 'EDU' in req and player.EDU < req['EDU']:
+                    continue
+                if 'INT' in req and player.INT < req['INT']:
+                    continue
+                if 'SEN' in req and player.SEN < req['SEN']:
+                    continue
+                if 'STR' in req and player.STR < req['STR']:
+                    continue
+                if 'SOC' in req and player.SOC < req['SOC']:
                     continue
                 if 'papers_published' in req and player.papers_published < req['papers_published']:
                     continue
@@ -160,13 +168,10 @@ class EventSystem:
             player.change_sanity(effect['sanity'])
             effect_msg.append(f"理智{effect['sanity']:+d}")
 
-        if 'knowledge' in effect:
-            player.knowledge += effect['knowledge']
-            effect_msg.append(f"知识{effect['knowledge']:+d}")
-
-        if 'inspiration' in effect:
-            player.inspiration += effect['inspiration']
-            effect_msg.append(f"灵感{effect['inspiration']:+d}")
+        for attr in ['INT', 'SEN', 'EDU', 'STR', 'SOC']:
+            if attr in effect:
+                setattr(player, attr, getattr(player, attr) + effect[attr])
+                effect_msg.append(f"{attr}{effect[attr]:+d}")
 
         if 'reputation' in effect:
             player.reputation += effect['reputation']

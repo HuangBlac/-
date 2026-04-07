@@ -22,7 +22,7 @@
       "description": "在做实验时，你突然想到了一个绝妙的研究思路！",
       "type": "academic",
       "trigger_condition": "research",
-      "effect": {"inspiration": 5, "progress": 5}
+      "effect": {"INT": 5, "progress": 5}
     },
     {
       "id": 204,
@@ -54,7 +54,7 @@
       "description": "你在文献中发现了一篇非常重要的论文，对你很有启发。",
       "type": "academic",
       "trigger_condition": "read",
-      "effect": {"knowledge": 2, "inspiration": 3}
+      "effect": {"EDU": 2, "INT": 3}
     },
     {
       "id": 208,
@@ -62,7 +62,7 @@
       "description": "你完成了大量的文献阅读，对研究领域有了全面了解。",
       "type": "academic",
       "trigger_condition": "read",
-      "effect": {"knowledge": 3, "progress": 5}
+      "effect": {"EDU": 3, "progress": 5}
     },
     {
       "id": 209,
@@ -79,7 +79,7 @@
       "type": "academic",
       "trigger_condition": "research",
       "choices": [
-        {"id": "investigate", "text": "深入调查", "effect": {"progress": 15, "sanity": -10, "inspiration": 5}},
+        {"id": "investigate", "text": "深入调查", "effect": {"progress": 15, "sanity": -10, "INT": 5}},
         {"id": "ignore", "text": "忽略异常", "effect": {"progress": 5, "sanity": -2}}
       ]
     },
@@ -89,7 +89,7 @@
       "description": "你参加了一次学术交流活动，结识了其他学校的研究者。",
       "type": "academic",
       "trigger_condition": "normal",
-      "effect": {"reputation": 2, "inspiration": 2}
+      "effect": {"reputation": 2, "INT": 2}
     },
     {
       "id": 212,

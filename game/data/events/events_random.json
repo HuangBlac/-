@@ -5,14 +5,14 @@
       "title": "奇怪的梦",
       "description": "你最近总是做奇怪的梦，梦中有一个巨大的章鱼头怪物在呼唤你。",
       "type": "mythos",
-      "effect": {"sanity": -5, "inspiration": 2}
+      "effect": {"sanity": -5, "INT": 2}
     },
     {
       "id": 2,
       "title": "图书馆禁书",
       "description": "你在图书馆的角落里发现了一本没有被编目的古籍。",
       "type": "mythos",
-      "effect": {"sanity": -10, "knowledge": 3}
+      "effect": {"sanity": -10, "EDU": 3}
     },
     {
       "id": 3,
@@ -26,21 +26,21 @@
       "title": "同门的警告",
       "description": "张同学悄悄告诉你，他最近看到了'不该看的东西'。",
       "type": "social",
-      "effect": {"sanity": -5, "inspiration": 1}
+      "effect": {"sanity": -5, "INT": 1}
     },
     {
       "id": 5,
       "title": "实验室意外",
       "description": "你的实验结果出现了无法解释的异常数据。",
       "type": "academic",
-      "effect": {"knowledge": 2, "sanity": -8}
+      "effect": {"EDU": 2, "sanity": -8}
     },
     {
       "id": 6,
       "title": "神秘符号",
       "description": "你在校园墙上看到了一个奇怪的符号，似乎在哪里见过...",
       "type": "mythos",
-      "effect": {"inspiration": 3, "sanity": -5}
+      "effect": {"INT": 3, "sanity": -5}
     },
     {
       "id": 7,
@@ -55,7 +55,7 @@
       "title": "失踪的同学",
       "description": "李同学已经一周没来上课了，有人说看到他深夜走进了森林...",
       "type": "mythos",
-      "effect": {"sanity": -15, "inspiration": 5}
+      "effect": {"sanity": -15, "INT": 5}
     },
     {
       "id": 9,
@@ -70,8 +70,8 @@
       "title": "直视深渊",
       "description": "你似乎看到了世界的真实面貌...那是一个充满疯狂与混沌的深渊。",
       "type": "mythos",
-      "effect": {"sanity": -20, "knowledge": 5},
-      "requirement": {"knowledge": 15}
+      "effect": {"sanity": -20, "EDU": 5},
+      "requirement": {"EDU": 15}
     },
     {
       "id": 11,
@@ -92,14 +92,14 @@
       "title": "奇怪的邮件",
       "description": "你收到一封没有发件人的邮件，内容是一串无法理解的符号。",
       "type": "mythos",
-      "effect": {"inspiration": 2, "sanity": -3}
+      "effect": {"INT": 2, "sanity": -3}
     },
     {
       "id": 14,
       "title": "图书馆新发现",
       "description": "你在图书馆发现了一本关于古代仪式的书，上面记载着召唤仪式。",
       "type": "mythos",
-      "effect": {"knowledge": 4, "sanity": -12}
+      "effect": {"EDU": 4, "sanity": -12}
     },
     {
       "id": 15,

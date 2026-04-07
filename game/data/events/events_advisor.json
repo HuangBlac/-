@@ -49,7 +49,7 @@
       "description": "助理导师单独指导你，解答了一些学术问题。",
       "type": "advisor",
       "trigger_condition": "has_assistant",
-      "effect": {"knowledge": 2, "sanity": 3}
+      "effect": {"EDU": 2, "sanity": 3}
     },
     {
       "id": 107,
@@ -65,7 +65,7 @@
       "description": "导师带你去参加学术会议，见到了很多业界大牛。",
       "type": "advisor",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 3, "reputation": 2, "sanity": -2}
+      "effect": {"EDU": 3, "reputation": 2, "sanity": -2}
     },
     {
       "id": 109,
@@ -108,7 +108,7 @@
       "description": "奈亚导师用那非人的眼睛注视着你，仿佛要看穿你的灵魂...",
       "type": "advisor",
       "trigger_condition": "nyarlathotep",
-      "effect": {"sanity": -20, "mutation": 0.05, "inspiration": 10}
+      "effect": {"sanity": -20, "mutation": 0.05, "INT": 10}
     },
     {
       "id": 114,
@@ -117,7 +117,7 @@
       "type": "advisor",
       "trigger_condition": "nyarlathotep",
       "choices": [
-        {"id": "accept", "text": "接受启示", "effect": {"sanity": -25, "knowledge": 10, "inspiration": 15}},
+        {"id": "accept", "text": "接受启示", "effect": {"sanity": -25, "EDU": 10, "INT": 15}},
         {"id": "resist", "text": "拒绝启示", "effect": {"sanity": -10, "reputation": -5}}
       ]
     },
@@ -127,7 +127,7 @@
       "description": "你有机会和导师深入讨论研究问题，收获颇丰。",
       "type": "advisor",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 1, "progress": 5}
+      "effect": {"EDU": 1, "progress": 5}
     }
   ]
 }

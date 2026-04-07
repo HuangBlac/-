@@ -52,7 +52,7 @@ class GraduationThesis:
             return "毕业论文已完成！"
 
         # 进度增加
-        progress_gain = random.randint(5, 15) + self.player.knowledge // 10
+        progress_gain = random.randint(5, 15) + self.player.EDU // 10
         self.progress = min(100, self.progress + progress_gain)
 
         result = f"正在{self.stage.value}...\n进度: {self.progress}%"
@@ -93,7 +93,7 @@ class GraduationThesis:
                 return "二审需要修改！"
         elif self.stage == ThesisStage.DEFENSE:
             # 毕业答辩
-            success_rate = 0.8 + self.player.inspiration * 0.01
+            success_rate = 0.8 + self.player.INT * 0.01
             if random.random() < success_rate:
                 self.stage = ThesisStage.COMPLETED
                 self.passed = True

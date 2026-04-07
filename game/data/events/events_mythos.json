@@ -6,7 +6,7 @@
       "description": "你在梦中听到远古的呼唤，那是来自深海的召唤...",
       "type": "mythos",
       "trigger_condition": "normal",
-      "effect": {"sanity": -8, "inspiration": 5}
+      "effect": {"sanity": -8, "INT": 5}
     },
     {
       "id": 302,
@@ -14,7 +14,7 @@
       "description": "你发现了一处疑似古代文明的遗迹，上面刻满了无法解读的符号。",
       "type": "mythos",
       "trigger_condition": "investigation",
-      "effect": {"knowledge": 5, "sanity": -15, "inspiration": 8}
+      "effect": {"EDU": 5, "sanity": -15, "INT": 8}
     },
     {
       "id": 303,
@@ -22,7 +22,7 @@
       "description": "你在校园附近发现了某种古老仪式的痕迹。",
       "type": "mythos",
       "trigger_condition": "investigation",
-      "effect": {"knowledge": 3, "sanity": -10}
+      "effect": {"EDU": 3, "sanity": -10}
     },
     {
       "id": 304,
@@ -30,7 +30,7 @@
       "description": "不知为何，你看到了不该看到的东西——那是来自群星之外的恐怖存在。",
       "type": "mythos",
       "trigger_condition": "rare",
-      "effect": {"sanity": -30, "mutation": 0.1, "inspiration": 15}
+      "effect": {"sanity": -30, "mutation": 0.1, "INT": 15}
     },
     {
       "id": 305,
@@ -38,7 +38,7 @@
       "description": "你感觉冥冥中有某种存在在注视着你，赐予你力量...",
       "type": "mythos",
       "trigger_condition": "rare",
-      "effect": {"inspiration": 10, "sanity": 5, "mutation": 0.05}
+      "effect": {"INT": 10, "sanity": 5, "mutation": 0.05}
     },
     {
       "id": 306,
@@ -46,7 +46,7 @@
       "description": "你接触到了真正的禁忌知识，那些是人类不应该知道的真相。",
       "type": "mythos",
       "trigger_condition": "research",
-      "effect": {"knowledge": 8, "sanity": -20}
+      "effect": {"EDU": 8, "sanity": -20}
     },
     {
       "id": 307,
@@ -62,7 +62,7 @@
       "description": "你感觉时间和空间开始错乱，记忆中出现了一些不属于你的片段。",
       "type": "mythos",
       "trigger_condition": "rare",
-      "effect": {"sanity": -15, "mutation": 0.1, "knowledge": 5}
+      "effect": {"sanity": -15, "mutation": 0.1, "EDU": 5}
     },
     {
       "id": 309,
@@ -70,7 +70,7 @@
       "description": "你开始看到一些不存在的东西，那是疯狂的预兆吗？",
       "type": "mythos",
       "trigger_condition": "low_sanity",
-      "effect": {"sanity": -10, "inspiration": 3}
+      "effect": {"sanity": -10, "INT": 3}
     },
     {
       "id": 310,
@@ -79,7 +79,7 @@
       "type": "mythos",
       "trigger_condition": "investigation",
       "choices": [
-        {"id": "investigate", "text": "深入调查", "effect": {"knowledge": 8, "sanity": -15, "reputation": 5}},
+        {"id": "investigate", "text": "深入调查", "effect": {"EDU": 8, "sanity": -15, "reputation": 5}},
         {"id": "report", "text": "上报学校", "effect": {"reputation": 10, "sanity": -5}},
         {"id": "ignore", "text": "不管闲事", "effect": {"sanity": -3}}
       ]
@@ -90,7 +90,7 @@
       "description": "你破解了一个神秘符号的含义，那是某种存在的名字！",
       "type": "mythos",
       "trigger_condition": "normal",
-      "effect": {"knowledge": 5, "inspiration": 8, "sanity": -8}
+      "effect": {"EDU": 5, "INT": 8, "sanity": -8}
     },
     {
       "id": 312,
@@ -107,7 +107,7 @@
       "type": "mythos",
       "trigger_condition": "rare",
       "choices": [
-        {"id": "complete", "text": "完成仪式", "effect": {"sanity": -25, "mutation": 0.15, "inspiration": 20}},
+        {"id": "complete", "text": "完成仪式", "effect": {"sanity": -25, "mutation": 0.15, "INT": 20}},
         {"id": "interrupt", "text": "中断仪式", "effect": {"sanity": -10, "progress": -10}}
       ]
     },
@@ -118,9 +118,9 @@
       "type": "mythos",
       "trigger_condition": "rare",
       "choices": [
-        {"id": "study", "text": "研究碎片", "effect": {"knowledge": 15, "sanity": -20, "mutation": 0.1}},
+        {"id": "study", "text": "研究碎片", "effect": {"EDU": 15, "sanity": -20, "mutation": 0.1}},
         {"id": "destroy", "text": "摧毁碎片", "effect": {"reputation": 5, "sanity": -5}},
-        {"id": "keep", "text": "保留碎片", "effect": {"inspiration": 10, "mutation": 0.05}}
+        {"id": "keep", "text": "保留碎片", "effect": {"INT": 10, "mutation": 0.05}}
       ]
     },
     {
@@ -129,7 +129,7 @@
       "description": "你的记忆中多了一些不属于你的东西——也许是前世的记忆？",
       "type": "mythos",
       "trigger_condition": "mutation",
-      "effect": {"knowledge": 3, "inspiration": 5, "mutation": 0.05}
+      "effect": {"EDU": 3, "INT": 5, "mutation": 0.05}
     }
   ]
 }

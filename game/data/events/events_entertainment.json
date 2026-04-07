@@ -33,7 +33,7 @@
       "title": "读书",
       "description": "你读了一本课外书，放松身心。",
       "type": "entertainment",
-      "effect": {"sanity": 6, "knowledge": 1}
+      "effect": {"sanity": 6, "EDU": 1}
     },
     {
       "id": 706,

@@ -2,73 +2,95 @@
   "events": [
     {
       "id": 701,
-      "title": "听音乐",
-      "description": "你戴上耳机，沉浸在音乐的世界里。",
+      "title": "听动漫音乐",
+      "description": "你感受了Ave Mujica乐队的旋律，突然有了一点灵感",
       "type": "entertainment",
-      "effect": {"sanity": 8}
+      "effect": {"sanity": 8, "progress": 1}
     },
     {
       "id": 702,
-      "title": "玩游戏",
-      "description": "你打了几把游戏，暂时忘记了研究的压力。",
+      "title": "原神启动",
+      "description": "你点开了一款风靡一时的二次元游戏，暂时忘记了研究的压力。",
       "type": "entertainment",
       "effect": {"sanity": 10, "progress": -5}
     },
     {
       "id": 703,
-      "title": "打篮球",
-      "description": "你去球场打了一场篮球，挥洒汗水。",
+      "title": "去游泳",
+      "description": "你去了一家新开的游泳池游了几圈，感觉身心都得到了放松，只是感觉离开水面后皮肤变得湿黏黏的。",
       "type": "entertainment",
       "effect": {"sanity": 12, "STR": 1}
     },
     {
       "id": 704,
       "title": "看电影",
-      "description": "你看了部电影，度过了轻松的时光。",
+      "description": "你又去看了一部老电影，度过了轻松的时光。",
       "type": "entertainment",
-      "effect": {"sanity": 10}
+      "effect": {"sanity": 5}
     },
+
     {
       "id": 705,
-      "title": "读书",
-      "description": "你读了一本课外书，放松身心。",
+      "title": "哲学阅读",
+      "description": "你阅读了加缪的一篇作品，你的脑子一定是坏掉了，你为什么要读这玩意儿啊。",
       "type": "entertainment",
       "effect": {"sanity": 6, "EDU": 1}
     },
     {
       "id": 706,
-      "title": "逛超市",
-      "description": "你去了趟超市，买了一些生活用品。",
+      "title": "吃顿好的",
+      "description": "你久违的拜访了一间人均消费很高的餐馆，感受着多汁的肉排，甜腻的海鲜，松软的糕点全都碎成了纤维，渣滓，然后咽入肚中。\n吃！爽！",
       "type": "entertainment",
       "effect": {"sanity": 5}
     },
     {
       "id": 707,
       "title": "睡觉",
-      "description": "你睡了一整天，什么也不想。",
+      "description": "你几乎睡到了第二天的夜晚，几乎是一天一夜。醒来看着城市的夜景，繁华的景象让你想到了梦境中的城市。\n或许唯有饥饿和昏昏沉沉的感觉才是现实的证明呢？",
       "type": "entertainment",
-      "effect": {"sanity": 15}
+      "effect": {"sanity": 10,"mutation": 0.05}
     },
     {
       "id": 708,
       "title": "跑步",
-      "description": "你围着校园跑了几圈，身体和心灵都得到了放松。",
+      "description": "你围着校园跑了几圈，身体和心灵都得到了放松。但是真的好累好累好累，再这样下去我就得猝死了。但我必须跑下去……跑下去……跑下去",
       "type": "entertainment",
       "effect": {"sanity": 10, "STR": 1}
     },
     {
       "id": 709,
       "title": "社交媒体",
-      "description": "你刷了刷社交媒体，看看朋友们都在做什么。",
+      "description": "你刷了刷社交媒体，看看朋友们都在做什么，窥视他人的幸福让你觉得内心一阵不安。\n为什么我要读研究生\n为什么我要选这个傻逼方向\n我操了这个傻逼导师傻逼方向傻逼世界啊啊啊啊啊",
       "type": "entertainment",
-      "effect": {"sanity": 5}
+      "effect": {"sanity": -1}
     },
     {
       "id": 710,
       "title": "喝茶",
-      "description": "你泡了杯茶，安静地坐着思考人生。",
+      "description": "你泡了杯茶，安静地坐着思考人生。果然钟离先生所热爱的确实是对的啊。",
       "type": "entertainment",
-      "effect": {"sanity": 8}
+      "effect": {"sanity": 3, "INT": 1}
+    },
+    {
+      "id": 711,
+      "title": "小猫",
+      "description": "你的室友养了一只小猫，你偶尔会和它玩耍，感觉它的毛茸茸的身体和温暖的体温能治愈你的心灵。\n但你总会想到小时候的一位老妇人，她似乎不是很喜欢猫。她去年去世了，身上有猫抓印……\n你对待猫的态度变得有些过分恭敬了。",
+      "type": "entertainment",
+      "effect": {"sanity": 3}
+    },
+    {
+      "id": 712,
+      "title": "流星",
+      "description": "你看到一颗流星划过夜空，许下了心愿。",
+      "type": "entertainment",
+      "effect": {"sanity": 5},
+      "followup": [
+        {
+          "condition": {"research_direction": "DEITY_RACE"},
+          "description": "但这让你想到了你的研究方向星之彩，你不禁为坠落方向之人开始祈祷",
+          "effect": {"EDU": 1, "sanity": -3}
+        }
+      ]
     }
   ]
 }

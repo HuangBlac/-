@@ -85,7 +85,7 @@
       "name": "奈亚子伟大",
       "type": "隐藏",
       "description": "由奈亚提亚普导师亲自授课的终极课程",
-      "attributes": {"INT": 5, "SEN": 5, "EDU": 5},
+      "attributes": {"SANS": -5},
       "credits": 5,
       "hidden": true
     }

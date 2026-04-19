@@ -294,9 +294,32 @@ class EntertainmentActionHandler(ActionHandler):
         if str_bonus:
             self.player.STR += str_bonus
 
-        return f"你{name}了{random.choice(['一会儿', '一下午', '一晚上'])}\n理智+{san}" + \
+        result = f"你{name}了{random.choice(['一会儿', '一下午', '一晚上'])}\n理智+{san}" + \
                (f"，STR+{str_bonus}" if str_bonus else "") + \
                (f"，研究进度{progress:+d}" if progress else "")
+
+        if random.random() < 0.4:
+            extra = self._trigger_entertainment_event()
+            if extra:
+                result += extra
+
+        return result
+
+    def _trigger_entertainment_event(self) -> str:
+        """触发娱乐随机事件"""
+        event_system = self.game.event_system
+        if not event_system:
+            return ""
+        event = event_system.get_random_event('entertainment', self.player)
+        if not event:
+            return ""
+        lines = [f"\n【随机事件】{event['title']}", event['description']]
+        event_system.apply_event_effect(self.player, event)
+        followup = event_system.get_followup_event(event, self.player)
+        if followup:
+            lines.append(followup['description'])
+            event_system.apply_event_effect(self.player, followup)
+        return "\n".join(lines)
 
     def _trigger_holiday_task(self) -> str:
         """触发假期导师任务"""

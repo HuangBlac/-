@@ -128,6 +128,22 @@
       "type": "advisor",
       "trigger_condition": "normal",
       "effect": {"EDU": 1, "progress": 5}
+    },
+    {
+      "id": 116,
+      "title": "导师的暗示",
+      "description": "导师在组会上暗示你，有些知识是'不应该被知道的'。",
+      "type": "advisor",
+      "trigger_condition": "random",
+      "effect": {"sanity": -3, "reputation": 1}
+    },
+    {
+      "id": 117,
+      "title": "组会汇报（随机）",
+      "description": "在组会上，你的汇报获得了导师的认可，但总感觉导师看你的眼神有些奇怪。",
+      "type": "advisor",
+      "trigger_condition": "random",
+      "effect": {"reputation": 2, "sanity": -2}
     }
   ]
 }

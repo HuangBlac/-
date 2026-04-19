@@ -236,6 +236,10 @@ class GameEngine:
                 self.log(f"【随机事件】{event['title']}")
                 self.log(event['description'])
                 self.event_system.apply_event_effect(self.player, event)
+                followup = self.event_system.get_followup_event(event, self.player)
+                if followup:
+                    self.log(followup['description'])
+                    self.event_system.apply_event_effect(self.player, followup)
 
     def _do_evaluate_idea(self) -> str:
         """评估Idea"""

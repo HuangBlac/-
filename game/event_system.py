@@ -27,6 +27,7 @@ class EventSystem:
             'social': 'events_social.json',
             'investigation': 'events_investigation.json',
             'holiday': 'events_holiday.json',
+            'entertainment': 'events_entertainment.json',
         }
 
         for event_type, filename in event_files.items():
@@ -78,22 +79,25 @@ class EventSystem:
             # 检查requirements
             req = event.get('requirement')
             if req:
-                if 'reputation' in req and player.reputation < req['reputation']:
-                    continue
-                if 'EDU' in req and player.EDU < req['EDU']:
-                    continue
-                if 'INT' in req and player.INT < req['INT']:
-                    continue
-                if 'SEN' in req and player.SEN < req['SEN']:
-                    continue
-                if 'STR' in req and player.STR < req['STR']:
-                    continue
-                if 'SOC' in req and player.SOC < req['SOC']:
-                    continue
-                if 'papers_published' in req and player.papers_published < req['papers_published']:
-                    continue
-                if 'sanity' in req and player.sanity > req['sanity']:  # sanity条件是小于等于
-                    continue
+                for key, value in req.items():
+                    if isinstance(value, str) and value.startswith(('>=', '>', '<=', '<')):
+                        op = value[:2] if value[1] in '=<>' else value[0]
+                        threshold = float(value[len(op):])
+                        player_val = getattr(player, key, 0)
+                        if op == '>=' and player_val < threshold:
+                            continue
+                        elif op == '>' and player_val <= threshold:
+                            continue
+                        elif op == '<=' and player_val > threshold:
+                            continue
+                        elif op == '<' and player_val >= threshold:
+                            continue
+                    else:
+                        # 向后兼容：数字表示 >=
+                        if key == 'sanity' and player.sanity > value:
+                            continue
+                        elif getattr(player, key, 0) < value:
+                            continue
 
             # 根据导师状态筛选
             if player.advisor:
@@ -190,3 +194,14 @@ class EventSystem:
             effect_msg.append(f"异变{effect['mutation']:+.2f}")
 
         return "，".join(effect_msg) if effect_msg else "无"
+
+    def get_followup_event(self, event: Dict, player) -> Optional[Dict]:
+        """检查并返回满足条件的后续事件"""
+        for followup in event.get('followup', []):
+            cond = followup.get('condition', {})
+            if 'research_direction' in cond:
+                direction = player.research_direction
+                if direction is None or direction.name != cond['research_direction']:
+                    continue
+            return followup
+        return None

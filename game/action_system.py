@@ -102,7 +102,7 @@ class ActionSystem:
             # 解析输入，如 "1 2 3"
             selections = [int(x.strip()) for x in selection.split() if x.strip().isdigit()]
 
-            if len(selection) != 3:
+            if len(selections) != 3:
                 log_func("请选择3门选修课！")
                 self.awaiting_course_selection = True
                 return ("请输入3个编号（如：1 2 3）", True)

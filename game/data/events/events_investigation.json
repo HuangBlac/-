@@ -74,7 +74,7 @@
     {
       "id": 508,
       "title": "古老文献",
-      "description": "你找到了一份珍贵的古代文献。",
+      "description": "你找到了一份珍贵的古代文献《拉莱亚文本》，阅读后，你对伟大的神明克苏鲁有了更深的了解，希望他早日降临。",
       "type": "investigation",
       "trigger_condition": "normal",
       "effect": {"EDU": 8, "sanity": -10}

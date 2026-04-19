@@ -70,7 +70,17 @@
       "description": "家人打电话关心你的近况。",
       "type": "social",
       "trigger_condition": "normal",
-      "effect": {"sanity": 5}
+      "effect": {"sanity": 5},
+      "followup": [
+        {
+          "title": "心态崩溃",
+          "description": "你这段时间经历的以及太多，那熟悉的声音让你近乎哽咽……真是的，明明已经不是小孩子了……",
+          "type": "social",
+          "trigger_condition": "family_pressure",
+          "effect": {"sanity": 5},
+          "requirement": {"mutation": ">=0.1"}
+        }
+      ]
     },
     {
       "id": 409,
@@ -132,6 +142,14 @@
       "type": "social",
       "trigger_condition": "normal",
       "effect": {"sanity": -3}
+    },
+    {
+      "id": 416,
+      "title": "同门的警告",
+      "description": "张同学悄悄告诉你，他最近看到了'不该看的东西'。",
+      "type": "social",
+      "trigger_condition": "random",
+      "effect": {"sanity": -5, "INT": 1}
     }
   ]
 }

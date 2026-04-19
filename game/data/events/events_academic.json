@@ -131,6 +131,40 @@
         {"id": "accept", "text": "接受演讲", "effect": {"reputation": 10, "sanity": -8}},
         {"id": "decline", "text": "拒绝演讲", "effect": {"reputation": -3}}
       ]
+    },
+    {
+      "id": 216,
+      "title": "实验室意外",
+      "description": "你的实验结果出现了无法解释的异常数据。",
+      "type": "academic",
+      "trigger_condition": "random",
+      "effect": {"EDU": 2, "sanity": -8}
+    },
+    {
+      "id": 217,
+      "title": "评审的邀请",
+      "description": "深潜者评审邀请你参与一个'特别的研究项目'。",
+      "type": "academic",
+      "trigger_condition": "random",
+      "effect": {"reputation": 5, "sanity": -10},
+      "requirement": {"reputation": 10}
+    },
+    {
+      "id": 218,
+      "title": "论文被引用",
+      "description": "你的论文被一篇奇怪的期刊引用了，作者署名是一串无法读出的符号。",
+      "type": "academic",
+      "trigger_condition": "random",
+      "effect": {"reputation": 3},
+      "requirement": {"papers_published": 1}
+    },
+    {
+      "id": 219,
+      "title": "实验材料丢失",
+      "description": "你放在实验台上的材料不翼而飞，但监控显示没有任何人进入。",
+      "type": "academic",
+      "trigger_condition": "random",
+      "effect": {"sanity": -5, "progress": -10}
     }
   ]
 }

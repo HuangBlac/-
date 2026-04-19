@@ -126,10 +126,74 @@
     {
       "id": 315,
       "title": "记忆错位",
-      "description": "你的记忆中多了一些不属于你的东西——也许是前世的记忆？",
+      "description": "你想起来了一位朋友，他在你最孤独的时候主动朝你搭话。\n你们一起聊起了中学时的趣事，竞赛停课时一起攻克那些数论和平几，那段日子艰难而美好\n(要是你真的学过竞赛就好了)\n你们还聊起了最近的研究和生活，感觉关系更近了一步\n你觉得这可能是你在这个世界上遇到的最温暖的事情了\n(但他不是在另一所学校吗？他怎么在这里？)\n你感觉就在你面前的那个朋友的形象变得模糊不清了...\n但是最近你确实在手机上看到过这张脸，上了新闻，（但不是发论文或是青年基金的喜讯）\n……\n将死之人会看见已死之人",
       "type": "mythos",
       "trigger_condition": "mutation",
-      "effect": {"EDU": 3, "INT": 5, "mutation": 0.05}
+      "effect": {"sanity": -3,  "mutation": 0.05}
+    },
+    {
+      "id": 316,
+      "title": "奇怪的梦",
+      "description": "你最近总是做奇怪的梦，梦中有一个巨大的章鱼头怪物在呼唤你。",
+      "type": "mythos",
+      "trigger_condition": "random",
+      "effect": {"sanity": -5, "INT": 2}
+    },
+    {
+      "id": 317,
+      "title": "图书馆禁书",
+      "description": "你在图书馆的角落里发现了一本没有被编目的古籍。",
+      "type": "mythos",
+      "trigger_condition": "random",
+      "effect": {"sanity": -10, "EDU": 3}
+    },
+    {
+      "id": 318,
+      "title": "神秘符号（随机）",
+      "description": "你在校园墙上看到了一个奇怪的符号，似乎在哪里见过...",
+      "type": "mythos",
+      "trigger_condition": "random",
+      "effect": {"INT": 3, "sanity": -5}
+    },
+    {
+      "id": 319,
+      "title": "失踪的同学",
+      "description": "李同学已经一周没来上课了，有人说看到他深夜走进了森林...",
+      "type": "mythos",
+      "trigger_condition": "random",
+      "effect": {"sanity": -15, "INT": 5}
+    },
+    {
+      "id": 320,
+      "title": "深夜脚步声",
+      "description": "深夜离开实验室时，你听到走廊里有脚步声，但空无一人...",
+      "type": "mythos",
+      "trigger_condition": "random",
+      "effect": {"sanity": -3}
+    },
+    {
+      "id": 321,
+      "title": "奇怪的邮件",
+      "description": "你收到一封没有发件人的邮件，内容是一串无法理解的符号。",
+      "type": "mythos",
+      "trigger_condition": "random",
+      "effect": {"INT": 2, "sanity": -3}
+    },
+    {
+      "id": 322,
+      "title": "图书馆新发现",
+      "description": "你在图书馆发现了一本关于古代仪式的书，上面记载着召唤仪式。",
+      "type": "mythos",
+      "trigger_condition": "random",
+      "effect": {"EDU": 4, "sanity": -12}
+    },
+    {
+      "id": 323,
+      "title": "外卖来了",
+      "description": "你在夜晚回到寝室，发现外卖已经送到了，是你最爱吃的炸鸡。正当你准备开吃时，你突然想起来这份外卖你点过很多次。你似乎从来没吃过有具体形状的肉。\n你吃的是什么？强烈的疑问在你脑海中翻腾。\n你剧烈的呕吐了出来。\n",
+      "type": "mythos",
+      "trigger_condition": "random",
+      "effect": {"sanity": -2, "STR": -1}
     }
   ]
 }

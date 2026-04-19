@@ -1,6 +1,8 @@
 """科研系统 - Idea获取、实验验证、论文攥写与投稿"""
+import json
 import random
 from enum import Enum
+from pathlib import Path
 from typing import List, Optional, Dict
 from .character import Player, ResearchDirection, ability_check, CheckResult
 
@@ -43,61 +45,50 @@ class ExperimentResult:
         self.depth = depth if depth is not None else quality
 
 
-# 不同研究方向的idea池
-IDEAS_POOL = {
-    ResearchDirection.ARCANE_ANALYSIS: [
-        ("法术能量模型", "建立描述法术能量的数学模型", 7),
-        ("召唤法阵优化", "研究如何提高召唤法阵的成功率", 8),
-        ("超自然科技史", "分析古代文明遗留的超自然科技", 6),
-        ("附魔材料研究", "探索附魔所需材料的特性", 5),
-        ("灵阵编码", "将魔法阵转化为可解读的编码系统", 9),
-    ],
-    ResearchDirection.MYTHOS_RITUAL: [
-        ("文本溯源分析", "通过文本比对确定古籍抄写年代", 7),
-        ("失传语言破译", "破解古代祭祀用语的含义", 8),
-        ("仪式流程重建", "还原古代召唤仪式的完整步骤", 9),
-        ("神话地理考证", "比对神话地点与现实地理位置", 6),
-        ("预言文本解读", "分析预言文本的模糊性特征", 8),
-    ],
-    ResearchDirection.DEITY_RACE: [
-        ("深潜者社会结构", "研究深潜者种群的社会组织形式", 7),
-        ("神话生物基因分析", "分析混血种族的遗传特征", 8),
-        ("附庸种族演化", "研究神明附庸种族的进化历程", 6),
-        ("跨种族交流", "探索与神话生物沟通的可能性", 9),
-        ("神话生物学", "建立神话生物的分类学体系", 7),
-    ],
-    ResearchDirection.OUTER_GOD: [
-        ("克苏鲁混沌模型", "建立描述阿撒托斯周围混沌能量的数学模型", 8),
-        ("旧日支配者意识探查", "通过量子纠缠探测古神意识场", 9),
-        ("纬度入侵理论", "研究旧日支配者跨越维度的入侵机制", 10),
-        ("外神心理分析", "分析外神的思维模式与动机", 8),
-        ("触手运动学", "分析大量触手怪物的运动模式", 5),
-    ],
-}
 
-# 不同研究方向对应的实验方法
-EXPERIMENT_METHODS = {
-    ResearchDirection.ARCANE_ANALYSIS: [
-        ("形式科学建模分析", "建立数学模型进行形式化分析"),
-        ("计算机模拟", "使用计算机模拟法术效果"),
-        ("数据收集与统计", "收集法术实验数据进行统计分析"),
-    ],
-    ResearchDirection.MYTHOS_RITUAL: [
-        ("钻研典籍", "深入阅读分析古代文献"),
-        ("文本比对", "对比多个版本的文本差异"),
-        ("考古验证", "通过考古发现验证文本内容"),
-    ],
-    ResearchDirection.DEITY_RACE: [
-        ("田野调查", "实地考察神话种族聚居地"),
-        ("DNA分析", "提取并分析神话生物的遗传物质"),
-        ("社会学研究", "通过访谈和观察研究其社会结构"),
-    ],
-    ResearchDirection.OUTER_GOD: [
-        ("理论研究", "构建纯理论框架进行分析"),
-        ("数学建模", "使用高等数学描述外神特性"),
-        ("哲学思辨", "从哲学角度理解超越性存在"),
-    ],
-}
+
+def _load_json_data(filename: str) -> dict:
+    """从data目录加载JSON数据"""
+    data_dir = Path(__file__).parent / "data"
+    filepath = data_dir / filename
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"[警告] 找不到数据文件: {filepath}")
+        return {}
+
+
+def _parse_ideas_pool(raw: dict) -> Dict[ResearchDirection, List[tuple]]:
+    """将JSON原始数据解析为IDEAS_POOL格式"""
+    pool = {}
+    for dir_name, ideas in raw.items():
+        direction = ResearchDirection[dir_name]
+        pool[direction] = [
+            (idea["name"], idea["description"], idea["innovation"])
+            for idea in ideas
+        ]
+    return pool
+
+
+def _parse_experiment_methods(raw: dict) -> Dict[ResearchDirection, List[tuple]]:
+    """将JSON原始数据解析为EXPERIMENT_METHODS格式"""
+    methods = {}
+    for dir_name, method_list in raw.items():
+        direction = ResearchDirection[dir_name]
+        methods[direction] = [
+            (method["name"], method["description"])
+            for method in method_list
+        ]
+    return methods
+
+
+# 加载数据文件
+_IDEAS_POOL_RAW = _load_json_data("ideas.json")
+_EXPERIMENT_METHODS_RAW = _load_json_data("experiment_methods.json")
+
+IDEAS_POOL = _parse_ideas_pool(_IDEAS_POOL_RAW)
+EXPERIMENT_METHODS = _parse_experiment_methods(_EXPERIMENT_METHODS_RAW)
 
 
 class Paper:

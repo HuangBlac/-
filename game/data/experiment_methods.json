@@ -1,0 +1,22 @@
+{
+  "ARCANE_ANALYSIS": [
+    {"name": "形式科学建模分析", "description": "建立数学模型进行形式化分析"},
+    {"name": "计算机模拟", "description": "使用计算机模拟法术效果"},
+    {"name": "数据收集与统计", "description": "收集法术实验数据进行统计分析"}
+  ],
+  "MYTHOS_RITUAL": [
+    {"name": "钻研典籍", "description": "深入阅读分析古代文献"},
+    {"name": "文本比对", "description": "对比多个版本的文本差异"},
+    {"name": "考古验证", "description": "通过考古发现验证文本内容"}
+  ],
+  "DEITY_RACE": [
+    {"name": "田野调查", "description": "实地考察神话种族聚居地"},
+    {"name": "DNA分析", "description": "提取并分析神话生物的遗传物质"},
+    {"name": "社会学研究", "description": "通过访谈和观察研究其社会结构"}
+  ],
+  "OUTER_GOD": [
+    {"name": "理论研究", "description": "构建纯理论框架进行分析"},
+    {"name": "数学建模", "description": "使用高等数学描述外神特性"},
+    {"name": "哲学思辨", "description": "从哲学角度理解超越性存在"}
+  ]
+}

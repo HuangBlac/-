@@ -1,0 +1,30 @@
+{
+  "ARCANE_ANALYSIS": [
+    {"name": "法术能量模型", "description": "建立描述法术能量的数学模型", "innovation": 7},
+    {"name": "召唤法阵优化", "description": "研究如何提高召唤法阵的成功率", "innovation": 8},
+    {"name": "超自然科技史", "description": "分析古代文明遗留的超自然科技", "innovation": 6},
+    {"name": "附魔材料研究", "description": "探索附魔所需材料的特性", "innovation": 5},
+    {"name": "灵阵编码", "description": "将魔法阵转化为可解读的编码系统", "innovation": 9}
+  ],
+  "MYTHOS_RITUAL": [
+    {"name": "文本溯源分析", "description": "通过文本比对确定古籍抄写年代", "innovation": 7},
+    {"name": "失传语言破译", "description": "破解古代祭祀用语的含义", "innovation": 8},
+    {"name": "仪式流程重建", "description": "还原古代召唤仪式的完整步骤", "innovation": 9},
+    {"name": "神话地理考证", "description": "比对神话地点与现实地理位置", "innovation": 6},
+    {"name": "预言文本解读", "description": "分析预言文本的模糊性特征", "innovation": 8}
+  ],
+  "DEITY_RACE": [
+    {"name": "深潜者社会结构", "description": "研究深潜者种群的社会组织形式", "innovation": 7},
+    {"name": "神话生物基因分析", "description": "分析混血种族的遗传特征", "innovation": 8},
+    {"name": "附庸种族演化", "description": "研究神明附庸种族的进化历程", "innovation": 6},
+    {"name": "跨种族交流", "description": "探索与神话生物沟通的可能性", "innovation": 9},
+    {"name": "神话生物学", "description": "建立神话生物的分类学体系", "innovation": 7}
+  ],
+  "OUTER_GOD": [
+    {"name": "克苏鲁混沌模型", "description": "建立描述阿撒托斯周围混沌能量的数学模型", "innovation": 8},
+    {"name": "旧日支配者意识探查", "description": "通过量子纠缠探测古神意识场", "innovation": 9},
+    {"name": "纬度入侵理论", "description": "研究旧日支配者跨越维度的入侵机制", "innovation": 10},
+    {"name": "外神心理分析", "description": "分析外神的思维模式与动机", "innovation": 8},
+    {"name": "触手运动学", "description": "分析大量触手怪物的运动模式", "innovation": 5}
+  ]
+}

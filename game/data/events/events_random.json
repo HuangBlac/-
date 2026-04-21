@@ -1,0 +1,28 @@
+{
+  "events": [
+    {
+      "id": 101,
+      "title": "走廊低语",
+      "description": "深夜经过实验楼走廊时，你听见门缝里传来像组会讨论一样的低语。可那间会议室今晚没有预约。",
+      "type": "random",
+      "trigger_condition": "normal",
+      "effect": {"sanity": -2, "INT": 1}
+    },
+    {
+      "id": 102,
+      "title": "食堂红烧肉",
+      "description": "食堂今天的红烧肉异常软烂，排队的人比平时多。你吃完后忽然想起，昨天楼里似乎少了一只实验样本。",
+      "type": "random",
+      "trigger_condition": "normal",
+      "effect": {"sanity": -1, "STR": 1}
+    },
+    {
+      "id": 103,
+      "title": "凌晨邮件",
+      "description": "导师在凌晨两点发来邮件：'这个方向很有意思，明早组会讲一下。'你盯着屏幕，睡意消失了。",
+      "type": "random",
+      "trigger_condition": "normal",
+      "effect": {"sanity": -3, "progress": 3}
+    }
+  ]
+}

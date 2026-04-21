@@ -130,8 +130,8 @@ class Player:
         self.semester = SemesterType.SPRING  # 当前学期
         self.week_in_semester = 1  # 学期内第几周
         self.age = 22  # 年龄
-        self.action_points = 3  # 当前行动点
-        self.max_action_points = 3  # 每周最大行动点
+        self.max_action_points = self.get_max_action_points()  # 每周最大行动点
+        self.action_points = self.max_action_points  # 当前行动点
 
         # ========== 新属性系统 (2026-03-27) ==========
         # 新五维属性
@@ -169,6 +169,7 @@ class Player:
 
         # 研究相关
         self.research_progress = 0  # 研究进度 0-100
+        self.research_unlocked = False  # 是否已通过研一课程解锁科研
         self.current_paper = None  # 当前论文
         self.papers_published = 0  # 已发表论文数
 
@@ -295,7 +296,8 @@ class Player:
 
     def reset_action_points(self):
         """重置行动点（每周开始时调用）"""
-        self.action_points = self.get_max_action_points()
+        self.max_action_points = self.get_max_action_points()
+        self.action_points = self.max_action_points
 
     def get_status(self) -> dict:
         """获取当前状态"""

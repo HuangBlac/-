@@ -98,6 +98,7 @@ class CourseActionHandler(ActionHandler):
 
         menu = self.game.course_system.get_course_selection_menu()
         self.log(menu)
+        self.game.action_system.awaiting_course_selection = True
         return "选课系统：\n必修课已自动选择：\n- 拉莱亚语言初步\n- 神话文本阅读\n- 形式科学导论\n\n请选择3门选修课（输入编号如：1 2 3）"
 
     def _do_class(self) -> str:
@@ -114,20 +115,24 @@ class CourseActionHandler(ActionHandler):
         difficulty = self.player.EDU + course.study_count * 10
         roll = random.randint(1, 100)
 
+        modified_attrs = []
+
         if roll == 1:
             bonus = random.randint(2, 4)
             for attr in ["INT", "SEN", "EDU", "STR"]:
                 if attr in course.attributes:
                     current = getattr(self.player, attr)
                     setattr(self.player, attr, current + bonus)
-            result = f"【大成功】你对{course.name}有了突飞猛进的理解！\n{attr}+{bonus}"
+                    modified_attrs.append(f"{attr}+{bonus}")
+            result = f"【大成功】你对{course.name}有了突飞猛进的理解！\n" + "\n".join(modified_attrs)
         elif roll < difficulty:
             bonus = random.randint(1, 2)
             for attr in ["INT", "SEN", "EDU", "STR"]:
                 if attr in course.attributes:
                     current = getattr(self.player, attr)
                     setattr(self.player, attr, current + bonus)
-            result = f"你认真学习了{course.name}课。\n{attr}+{bonus}"
+                    modified_attrs.append(f"{attr}+{bonus}")
+            result = f"你认真学习了{course.name}课。\n" + "\n".join(modified_attrs)
         else:
             result = f"你上了{course.name}课，但感觉收获不大。"
 
@@ -139,12 +144,9 @@ class CourseActionHandler(ActionHandler):
 
     def _do_final_exam(self) -> str:
         """期末考试"""
-        if not hasattr(self.game.action_system, '_exam_done'):
-            self.game.action_system._exam_done = False
-
-        if not self.game.action_system._exam_done:
+        if not self.game.action_system.exam_done:
             result = self.game.exam_system.hold_final_exams(self.player)
-            self.game.action_system._exam_done = True
+            self.game.action_system.exam_done = True
             self.player.research_direction = self.game.exam_system.get_research_direction_from_courses()
             self.player.courses_selected = True
             return f"【期末考试成绩】\n{result}\n\n根据你的选课，你的研究方向是：{self.player.research_direction.value}"

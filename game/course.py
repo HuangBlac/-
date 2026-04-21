@@ -300,6 +300,7 @@ class ExamSystem:
         all_passed = all(c.passed for c in active_courses)
         if all_passed:
             self.course_system.first_semester_completed = True
+            player.research_unlocked = True
             results.append("\n【第一学期已完成】你可以进入科研阶段了！")
 
         self.exams_completed = True

@@ -31,24 +31,23 @@ class GameEngine:
         # 事件系统
         self.event_system = EventSystem()
 
-        # 初始化各子系统
+        # 初始化各子系统（异变系统先创建，供科研系统使用）
+        self.mutation_system = MutationSystem()
         self.course_system = CourseSystem()
         self.exam_system = ExamSystem(self.course_system)
-        self.research_system = ResearchSystem(self.player)
+        self.research_system = ResearchSystem(self.player, self.mutation_system)
         self.graduation_thesis = GraduationThesis(self.player)
         self.advisor_system = AdvisorSystem()
 
         # 行动系统
         self.action_system = ActionSystem(
+            self,
             self.player,
             self.course_system,
             self.research_system,
             self.graduation_thesis,
             self._init_npcs()
         )
-
-        # 异变系统
-        self.mutation_system = MutationSystem()
 
         # 游戏状态管理
         self.game_state = GameStateManager()
@@ -140,6 +139,14 @@ class GameEngine:
         Returns:
             是否继续游戏
         """
+        # 子系统等待输入时，不消耗行动点，也不推进随机事件。
+        if (self.action_system.awaiting_course_selection or
+                self.action_system.awaiting_entertainment_selection):
+            action_result, _ = self.action_system.do_action(action, self.log)
+            if action_result:
+                self.log(action_result)
+            return not self.game_state.is_ended()
+
         # 如果正在等待idea评估决定，先处理决定
         if self.awaiting_idea_decision:
             self.awaiting_idea_decision = False
@@ -160,15 +167,15 @@ class GameEngine:
             self.log(self.research_system.get_idea_status())
             return False
 
-        # 检查行动点 - STR继续工作检测
-        if self._check_continue_work():
-            return not self.game_state.is_ended()
-
         # 消耗行动点
         if not self.player.consume_action_point():
-            self.log("本周行动点已用完！")
-            self._advance_week()
-            return not self.game_state.is_ended()
+            if self._check_continue_work():
+                self.player.action_points += 1
+                self.player.consume_action_point()
+            else:
+                self.log("本周行动点已用完！")
+                self._advance_week()
+                return not self.game_state.is_ended()
 
         self.turn_count += 1
 
@@ -215,8 +222,6 @@ class GameEngine:
             if random.random() * 100 < trigger_chance:
                 self.player.continue_action_count += 1
                 self.log("【STR继续工作】你感觉自己还有精力，可以再做一件事！")
-                self._trigger_random_event()
-                self.game_state.check_game_over(self.player, self.graduation_thesis, self.log)
                 return True
         return False
 

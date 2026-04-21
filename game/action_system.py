@@ -8,15 +8,16 @@ from .action_handlers import ActionHandlerFactory
 class ActionSystem:
     """行动系统管理器 - 使用模块化处理器"""
 
-    def __init__(self, player, course_system, research_system, graduation_thesis, npcs):
+    def __init__(self, game_engine, player, course_system, research_system, graduation_thesis, npcs):
+        self.game = game_engine
         self.player = player
         self.course_system = course_system
         self.research_system = research_system
         self.graduation_thesis = graduation_thesis
         self.npcs = npcs
 
-        # 初始化各类型行动处理器
-        self.handlers = ActionHandlerFactory.get_all_handlers(self)
+        # 初始化各类型行动处理器（传入 GameEngine）
+        self.handlers = ActionHandlerFactory.get_all_handlers(game_engine)
 
         # 状态标记
         self.exam_done = False  # 期末考试是否已完成
@@ -41,8 +42,30 @@ class ActionSystem:
         if self.awaiting_entertainment_selection:
             return self._handle_entertainment_selection(action, log_func)
 
+        # 通用行动（不消耗行动点，不按阶段分发）
+        if action == "0":
+            return ("__SHOW_STATUS__", True)
+
+        # 调查行动
+        if action == "6":
+            handler = self.handlers["investigation"]
+            result = handler.handle(action)
+            return (result, True)
+
+        # 社交行动
+        if action == "7":
+            handler = self.handlers["social"]
+            result = handler.handle(action)
+            return (result, True)
+
+        # 毕业论文
+        if action == "8":
+            handler = self.handlers["graduation"]
+            result = handler.handle(action)
+            return (result, True)
+
         # 判断当前阶段
-        in_research = self.player.year >= 2 or self.course_system.first_semester_completed
+        in_research = self.research_system.can_start_research()
         is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
 
         # 根据阶段分发行动
@@ -194,7 +217,7 @@ class ActionSystem:
         """获取可选行动"""
         actions = []
 
-        in_research = self.player.year >= 2 or self.course_system.first_semester_completed
+        in_research = self.research_system.can_start_research()
         is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
 
         # 课程阶段

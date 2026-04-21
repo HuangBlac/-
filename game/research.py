@@ -149,15 +149,16 @@ class Paper:
 class ResearchSystem:
     """科研管理系统"""
 
-    def __init__(self, player: Player):
+    def __init__(self, player: Player, mutation_system=None):
         self.player = player
+        self.mutation_system = mutation_system
         self.ideas: List[Idea] = []  # 所有idea
         self.current_paper: Optional[Paper] = None
         self.literature_progress = 0  # 文献阅读进度 0-100
 
     def can_start_research(self) -> bool:
         """是否可以开始科研（研二及以上）"""
-        return self.player.year >= 2
+        return self.player.year >= 2 or getattr(self.player, "research_unlocked", False)
 
     def assign_research_direction(self) -> str:
         """分配研究方向（研二时自动调用）"""
@@ -256,8 +257,17 @@ class ResearchSystem:
             return self.player.advisor.sanity_consumption_modifier
         return 1.0
 
-    def _generate_idea_with_check(self) -> str:
-        """生成idea（使用INT判定决定创新值）"""
+    def _generate_idea_with_check(self) -> tuple[str, int]:
+        """生成idea（使用INT判定决定创新值）
+
+        创新值规则：
+        - 普通成功：base + (INT-20)//10，截断到 9
+        - 大成功：创新值 10（邪神级 idea，仅大成功出现）
+        - 创新值 ≥9：异变增加（窥见真理的代价）
+
+        Returns:
+            (消息文本, 骰点值)
+        """
         # 进行INT直觉判定
         check_result, roll = ability_check(self.player, "INT")
 
@@ -266,14 +276,14 @@ class ResearchSystem:
         name, desc, base_innovation = random.choice(pool)
 
         if check_result == CheckResult.CRITICAL_SUCCESS:
-            # 大成功：创新值10
+            # 大成功：邪神级 idea（创新值 10）
             innovation = 10
-            msg = f"【大成功】你感觉你才思泉涌，想到了一个从未有过的天才想法！"
+            msg = f"【大成功·邪神级】你感觉你才思泉涌，想到了一个从未有过的天才想法！\n这个念头让你浑身发冷，仿佛有什么东西透过这个想法注视着你..."
         elif check_result in [CheckResult.EXTREME_SUCCESS, CheckResult.HARD_SUCCESS, CheckResult.SUCCESS]:
-            # 成功：按公式计算创新值
-            innovation = int(base_innovation * (1 + self.player.INT / 50))
-            innovation = max(1, min(10, innovation))
-            msg = f"【成功】你冥思苦想，想到了一个不错的点子。"
+            # 成功：base + INT加成，截断到 9
+            innovation = base_innovation + (self.player.INT - 20) // 10
+            innovation = max(1, min(9, innovation))
+            msg = f"【{check_result}】你冥思苦想，想到了一个不错的点子。"
         elif check_result == CheckResult.FAILURE:
             # 失败：不生成idea，进度回退
             self.literature_progress = random.randint(70, 80)
@@ -289,8 +299,14 @@ class ResearchSystem:
         self.ideas.append(idea)
         self.literature_progress = 0
 
+        # 高创新值的异变代价（窥见真理）
+        if self.mutation_system and innovation >= 9:
+            mutation_msg = []
+            self.mutation_system.apply_idea_mutation(self.player, innovation, mutation_msg.append)
+            msg += "\n" + "\n".join(mutation_msg)
+
         msg += f"\n你获得了新的idea: {idea.name}\n{idea.description}\n创新值: {idea.innovation}/10"
-        return msg
+        return msg, roll
 
     def _generate_idea(self) -> Idea:
         """生成新idea（旧版兼容）"""

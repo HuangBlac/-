@@ -140,8 +140,7 @@ class GameEngine:
             是否继续游戏
         """
         # 子系统等待输入时，不消耗行动点，也不推进随机事件。
-        if (self.action_system.awaiting_course_selection or
-                self.action_system.awaiting_entertainment_selection):
+        if self.action_system.awaiting_course_selection:
             action_result, _ = self.action_system.do_action(action, self.log)
             if action_result:
                 self.log(action_result)
@@ -151,10 +150,6 @@ class GameEngine:
         if self.awaiting_idea_decision:
             self.awaiting_idea_decision = False
             return self._handle_idea_decision(action)
-
-        # Debug行动
-        if self.action_system.handle_debug_action(action, self.log):
-            return not self.game_state.is_ended()
 
         # 退出
         if action == "q":
@@ -326,12 +321,6 @@ class GameEngine:
     def get_actions(self) -> list:
         """获取可选行动"""
         actions = self.action_system.get_actions()
-
-        # Debug行动（仅在debug模式下显示）
-        if self.debug_mode:
-            actions.append(("A", "快进", "[DEBUG] 时间快进一周"))
-            actions.append(("B", "跳转研二", "[DEBUG] 快速跳转到研二测试小论文"))
-            actions.append(("M", "异变+1", "[DEBUG] 测试异变效果"))
 
         actions.append(("q", "退出", "结束游戏"))
         return actions

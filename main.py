@@ -23,7 +23,7 @@ def select_mode():
 
 def main_console():
     """控制台模式主函数"""
-    from game.game_engine import GameCore
+    from game.game_engine import GameEngine
     from ui.console import ConsoleUI
 
     ui = ConsoleUI()
@@ -43,7 +43,7 @@ def main_console():
         name = "研究生"
 
     # 初始化游戏
-    game = GameCore(name)
+    game = GameEngine(name)
     game.start_game()
 
     # 游戏主循环

@@ -97,6 +97,30 @@ class MutationSystem:
 
         return False
 
+    def apply_idea_mutation(self, player, innovation: int, log_func) -> None:
+        """高创新值 idea 触发的异变效果
+
+        创新值 ≥9 时增加异变值，体现"越接近真理越接近疯狂"。
+
+        Args:
+            player: 玩家对象
+            innovation: idea 创新值
+            log_func: 日志记录函数
+        """
+        if innovation < 9:
+            return
+
+        if innovation == 10:
+            # 邪神级 idea：直接接触不可名状
+            player.mutation += 0.1
+            log_func("【窥视】你感觉自己触碰到了不该存在的真相...")
+            log_func("【异变+0.1】思维深处有什么东西在生长...")
+        else:
+            # 创新值 9：窥见真理的边缘
+            player.mutation += 0.05
+            log_func("【窥视】这个想法让你感到不安，仿佛背后藏着什么...")
+            log_func("【异变+0.05】知识的边界开始模糊...")
+
     def get_corrupted_status_text(self, text: str, mutation_level: float) -> str:
         """获取经过异变处理的文本（可能返回污染版本）
 

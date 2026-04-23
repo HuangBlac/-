@@ -22,6 +22,10 @@ Thumbs.db
 *.sav
 save/
 
+# Tests
+test/
+tests/
+
 # Claude Code & Development Docs
 CLAUDE.md
 docs/

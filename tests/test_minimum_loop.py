@@ -40,6 +40,39 @@ class MinimumLoopTest(unittest.TestCase):
         action_ids = {action_id for action_id, _, _ in game.get_actions()}
         self.assertIn("2", action_ids)
 
+    def test_year_two_does_not_unlock_research_without_exam_unlock(self):
+        game = GameEngine("tester")
+        game.start_game()
+        game.player.year = 2
+        game.player.research_unlocked = False
+        game.player.research_direction = ResearchDirection.ARCANE_ANALYSIS
+
+        self.assertFalse(game.research_system.can_start_research())
+
+        action_ids = {action_id for action_id, _, _ in game.get_actions()}
+        self.assertNotIn("2", action_ids)
+
+    def test_failed_final_exam_does_not_assign_research_direction(self):
+        game = GameEngine("tester")
+        game.start_game()
+
+        with patch("game.course.ability_check", return_value=(CheckResult.FAILURE, 90)):
+            result = game.action_system.handlers["course"]._do_final_exam()
+
+        self.assertFalse(game.player.research_unlocked)
+        self.assertIsNone(game.player.research_direction)
+        self.assertIn("暂未解锁科研方向", result)
+
+    def test_passed_final_exam_unlocks_research_and_assigns_direction(self):
+        game = GameEngine("tester")
+        game.start_game()
+
+        with patch("game.course.ability_check", return_value=(CheckResult.SUCCESS, 1)):
+            game.action_system.handlers["course"]._do_final_exam()
+
+        self.assertTrue(game.player.research_unlocked)
+        self.assertIsNotNone(game.player.research_direction)
+
     def test_random_events_load_without_missing_file_warning(self):
         event_system = EventSystem()
 

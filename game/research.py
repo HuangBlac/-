@@ -157,35 +157,22 @@ class ResearchSystem:
         self.literature_progress = 0  # 文献阅读进度 0-100
 
     def can_start_research(self) -> bool:
-        """是否可以开始科研（研二及以上）"""
-        return self.player.year >= 2 or getattr(self.player, "research_unlocked", False)
+        """是否可以开始科研（通过课程考试解锁）"""
+        return getattr(self.player, "research_unlocked", False)
 
     def assign_research_direction(self) -> str:
-        """分配研究方向（研二时自动调用）"""
+        """研究方向由课程考试决定，科研系统不再自行分配。"""
         if self.player.research_direction:
             return f"你已有研究方向：{self.player.research_direction.value}"
-
-        # 随机分配一个研究方向
-        direction = random.choice(list(ResearchDirection))
-        self.player.research_direction = direction
-
-        direction_names = {
-            ResearchDirection.ARCANE_ANALYSIS: "法术与超自然科技分析",
-            ResearchDirection.MYTHOS_RITUAL: "神话文本与仪式构造",
-            ResearchDirection.DEITY_RACE: "神明附属种族与独立种族",
-            ResearchDirection.OUTER_GOD: "旧日支配者与外神",
-        }
-
-        return f"根据你的课程学习，你被分配到{direction_names[direction]}方向进行研究！"
+        return "请先通过课程考试解锁科研方向。"
 
     def start_research(self) -> str:
         """开始科研（选择研究方向）"""
         if not self.can_start_research():
-            return "只有研二及以上才能开始科研！"
+            return "请先通过课程考试解锁科研！"
 
-        # 如果没有研究方向，自动分配一个
         if not self.player.research_direction:
-            return self.assign_research_direction()
+            return "尚未确定研究方向，请先通过课程考试。"
 
         return f"你开始跟随{self.player.relationships.get('导师', '导师')}进行{self.player.research_direction.value}..."
 
@@ -196,7 +183,7 @@ class ResearchSystem:
         2. 达到100%时进行直觉(INT)判定决定idea创新值
         """
         if not self.can_start_research():
-            return "只有研二及以上才能开始科研！"
+            return "请先通过课程考试解锁科研！"
 
         if not self.player.research_direction:
             return "请先选择研究方向！"
@@ -301,20 +288,15 @@ class ResearchSystem:
 
         # 高创新值的异变代价（窥见真理）
         if self.mutation_system and innovation >= 9:
+            self.mutation_system.apply_idea_mutation(self.player, innovation, lambda m: msg.append(m) if isinstance(msg, list) else None)
+            # mutation_system 会直接调用 log_func，但这里 msg 是 str，需要在返回文本中追加
+            # 重新处理：mutation 消息直接拼接到 msg
             mutation_msg = []
             self.mutation_system.apply_idea_mutation(self.player, innovation, mutation_msg.append)
             msg += "\n" + "\n".join(mutation_msg)
 
         msg += f"\n你获得了新的idea: {idea.name}\n{idea.description}\n创新值: {idea.innovation}/10"
         return msg, roll
-
-    def _generate_idea(self) -> Idea:
-        """生成新idea（旧版兼容）"""
-        pool = IDEAS_POOL.get(self.player.research_direction, [])
-        name, desc, innovation = random.choice(pool)
-        # 添加一些随机变化
-        innovation = max(1, min(10, innovation + random.randint(-1, 1)))
-        return Idea(name, desc, innovation, self.player.research_direction)
 
     def evaluate_idea(self, idea_index: int, decision: str) -> str:
         """评估idea
@@ -548,7 +530,7 @@ class ResearchSystem:
             self.player.change_sanity(-san_loss)
             self.player.mutation += 0.05
             result_msg.append(f"【Desk Reject】论文未经送审直接被拒！\n论文被摧毁...理智-{san_loss}")
-            result_msg.append("你感觉自己被学术界彻底否定了...")
+            result_msg.append("你感觉自己被学术界彻底否定了...但这或许是好事？")
             self.current_paper = None
 
         return "\n".join(result_msg)

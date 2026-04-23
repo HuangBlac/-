@@ -147,11 +147,18 @@ class CourseActionHandler(ActionHandler):
         if not self.game.action_system.exam_done:
             result = self.game.exam_system.hold_final_exams(self.player)
             self.game.action_system.exam_done = True
-            self.player.research_direction = self.game.exam_system.get_research_direction_from_courses()
             self.player.courses_selected = True
+
+            if self.player.research_unlocked:
+                self.player.research_direction = self.game.exam_system.get_research_direction_from_courses()
+                return (
+                    f"【期末考试成绩】\n{result}\n\n"
+                    f"根据你的选课，你的研究方向是：{self.player.research_direction.value}"
+                )
+
             return (
                 f"【期末考试成绩】\n{result}\n\n"
-                f"根据你的选课，你的研究方向是：{self.player.research_direction.value}"
+                "课程尚未全部通过，暂未解锁科研方向。"
             )
 
         return "你已经完成期末考试！"
@@ -165,7 +172,7 @@ class ResearchActionHandler(ActionHandler):
 
         if action == "2":
             if not self.player.research_direction:
-                return self.game.research_system.assign_research_direction()
+                return "尚未确定研究方向，请先通过课程考试。"
             return self.game.research_system.read_literature()
         if action == "3":
             return self._do_experiment()

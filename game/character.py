@@ -152,10 +152,7 @@ class Player:
         # 继续工作触发次数限制
         self.continue_action_count = 0  # STR>70时触发"继续工作"的次数
         self.max_continue_actions = 10  # 每局最多触发次数
-
-        # 旧属性（兼容保留）
-        self.knowledge = 10  # 知识（用于部分事件判定）
-        self.inspiration = 10  # 灵感（用于部分事件判定）
+    
 
         # 导师相关（研一自动分配）
         self.advisor = None  # 导师对象
@@ -307,7 +304,7 @@ class Player:
             "学期": self.semester_name,
             "周数": f"第{self.week_in_semester}周",
             "行动点": f"{self.action_points}/{self.max_action_points}",
-            "年龄": f"{self.age}岁",
+            "年龄": f"{self.age-1}岁",
             "理智": f"{self.sanity}/100 ({self.sanity_level})",
             "异变": f"{self.mutation:.2f} ({self.mutation_level})",
             "INT直觉": self.INT,

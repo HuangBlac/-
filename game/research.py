@@ -244,22 +244,34 @@ class ResearchSystem:
             return self.player.advisor.sanity_consumption_modifier
         return 1.0
 
-    def _generate_idea_with_check(self) -> tuple[str, int]:
+    def generate_inspiration_idea(self) -> tuple[str, bool]:
+        """通过灵感爆发生成idea，不影响文献阅读进度。
+
+        Returns:
+            (消息文本, 是否实际触发)
+        """
+        idea_result, _ = self._generate_idea_with_check(affect_literature_progress=False)
+        return idea_result, not idea_result.startswith("【警告】")
+
+    def _generate_idea_with_check(self, affect_literature_progress: bool = True) -> tuple[str, int]:
         """生成idea（使用INT判定决定创新值）
 
         创新值规则：
         - 普通成功：base + (INT-20)//10，截断到 9
         - 大成功：创新值 10（邪神级 idea，仅大成功出现）
         - 创新值 ≥9：异变增加（窥见真理的代价）
+        - 灵感爆发复用同一逻辑，但不修改文献阅读进度
 
         Returns:
             (消息文本, 骰点值)
         """
-        # 进行INT直觉判定
-        check_result, roll = ability_check(self.player, "INT")
-
         # 从池中获取基础创新值
         pool = IDEAS_POOL.get(self.player.research_direction, [])
+        if not pool:
+            return "【警告】当前研究方向没有可用idea池，无法生成idea。", 0
+
+        # 进行INT直觉判定
+        check_result, roll = ability_check(self.player, "INT")
         name, desc, base_innovation = random.choice(pool)
 
         if check_result == CheckResult.CRITICAL_SUCCESS:
@@ -273,27 +285,31 @@ class ResearchSystem:
             msg = f"【{check_result}】你冥思苦想，想到了一个不错的点子。"
         elif check_result == CheckResult.FAILURE:
             # 失败：不生成idea，进度回退
-            self.literature_progress = random.randint(70, 80)
-            return f"【失败】你未能理解这篇文章的核心思想，无法产生有效的idea。\n文献阅读进度回退到{self.literature_progress}%。", roll
+            if affect_literature_progress:
+                self.literature_progress = random.randint(70, 80)
+                return f"【失败】你未能理解这篇文章的核心思想，无法产生有效的idea。\n文献阅读进度回退到{self.literature_progress}%。", roll
+            return "【失败】灵感转瞬即逝，你未能将它整理成有效的idea。", roll
         else:
             # 大失败：进度清零，异变值+0.05
-            self.literature_progress = 0
+            if affect_literature_progress:
+                self.literature_progress = 0
             self.player.mutation += 0.05
-            return f"【大失败】你的精神受到了冲击，感觉自己过往的学习就是一团灰尘...  \n文献阅读进度清零。\n【异变+0.05】", roll
+            if affect_literature_progress:
+                return f"【大失败】你的精神受到了冲击，感觉自己过往的学习就是一团灰尘...  \n文献阅读进度清零。\n【异变+0.05】", roll
+            return "【大失败】你的灵感坍缩成无法名状的噪声，精神受到了冲击...\n【异变+0.05】", roll
 
         # 创建idea
         idea = Idea(name, desc, innovation, self.player.research_direction)
         self.ideas.append(idea)
-        self.literature_progress = 0
+        if affect_literature_progress:
+            self.literature_progress = 0
 
         # 高创新值的异变代价（窥见真理）
         if self.mutation_system and innovation >= 9:
-            self.mutation_system.apply_idea_mutation(self.player, innovation, lambda m: msg.append(m) if isinstance(msg, list) else None)
-            # mutation_system 会直接调用 log_func，但这里 msg 是 str，需要在返回文本中追加
-            # 重新处理：mutation 消息直接拼接到 msg
             mutation_msg = []
             self.mutation_system.apply_idea_mutation(self.player, innovation, mutation_msg.append)
-            msg += "\n" + "\n".join(mutation_msg)
+            if mutation_msg:
+                msg += "\n" + "\n".join(mutation_msg)
 
         msg += f"\n你获得了新的idea: {idea.name}\n{idea.description}\n创新值: {idea.innovation}/10"
         return msg, roll

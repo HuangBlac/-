@@ -182,8 +182,8 @@ class EventSystem:
             effect_msg.append(f"声望{effect['reputation']:+d}")
 
         if 'progress' in effect:
-            player.research_progress += effect['progress']
-            effect_msg.append(f"研究进度{effect['progress']:+d}")
+            player.research_progress = min(255, max(0, player.research_progress + effect['progress']))
+            effect_msg.append(f"灵感{effect['progress']:+d}")
 
         if 'papers_published' in effect:
             player.papers_published += effect['papers_published']

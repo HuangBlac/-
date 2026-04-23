@@ -248,13 +248,13 @@ class EntertainmentActionHandler(ActionHandler):
 
         name, sanity, progress, str_bonus = holiday_options[action]
         self.player.change_sanity(sanity)
-        self.player.research_progress += progress
+        self.player.research_progress = min(255, max(0, self.player.research_progress + progress))
         if str_bonus:
             self.player.STR += str_bonus
 
         result = f"你{name}了几天\n理智+{sanity}"
         if progress:
-            result += f"，研究进度+{progress}"
+            result += f"，灵感+{progress}"
         if str_bonus:
             result += f"，STR+{str_bonus}"
 
@@ -293,9 +293,9 @@ class EntertainmentActionHandler(ActionHandler):
         progress = random.randint(5, 15)
 
         self.player.change_sanity(-san_loss)
-        self.player.research_progress += progress
+        self.player.research_progress = min(255, max(0, self.player.research_progress + progress))
 
-        return f"【{task}】\n理智-{san_loss}，研究进度+{progress}\n这个假期没法好好休息了..."
+        return f"【{task}】\n理智-{san_loss}，灵感+{progress}\n这个假期没法好好休息了..."
 
 
 class InvestigationActionHandler(ActionHandler):

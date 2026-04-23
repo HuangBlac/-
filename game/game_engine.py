@@ -194,6 +194,9 @@ class GameEngine:
         # 触发随机事件
         self._trigger_random_event()
 
+        # 回合末检查灵感爆发。随机事件、假期活动等只负责积累灵感，爆发由引擎统一结算。
+        self._trigger_inspiration_burst()
+
         # 应用异变效果
         self.mutation_system.apply_mutation_effect(self.player, self.log)
 
@@ -240,6 +243,28 @@ class GameEngine:
                 if followup:
                     self.log(followup['description'])
                     self.event_system.apply_event_effect(self.player, followup)
+
+    def _trigger_inspiration_burst(self):
+        """回合末结算灵感爆发机制。"""
+        if self.player.research_progress < 100:
+            return
+
+        if not self.player.research_direction:
+            return
+
+        idea_result, triggered = self.research_system.generate_inspiration_idea()
+        if not triggered:
+            self.log(idea_result)
+            return
+
+        progress_loss = random.randint(1, 100)
+        sanity_loss = random.randint(3, 8)
+        self.player.research_progress = max(0, self.player.research_progress - progress_loss)
+        self.player.change_sanity(-sanity_loss)
+
+        self.log("【灵感爆发】你仿佛从那梦境的都市取得了最璀璨的宝石，但是你是从何而来的，你陷入了困惑……")
+        self.log(f"理智-{sanity_loss}")
+        self.log(idea_result)
 
     def _do_evaluate_idea(self) -> str:
         """评估Idea"""

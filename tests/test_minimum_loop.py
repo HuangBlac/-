@@ -78,6 +78,82 @@ class MinimumLoopTest(unittest.TestCase):
 
         self.assertGreater(len(event_system.get_events("random")), 0)
 
+    def test_event_progress_updates_inspiration_with_bounds(self):
+        game = GameEngine("tester")
+        game.start_game()
+        event_system = EventSystem()
+
+        game.player.research_progress = 250
+        result = event_system.apply_event_effect(game.player, {"effect": {"progress": 20}})
+
+        self.assertEqual(game.player.research_progress, 255)
+        self.assertIn("灵感+20", result)
+
+        game.player.research_progress = 3
+        event_system.apply_event_effect(game.player, {"effect": {"progress": -10}})
+
+        self.assertEqual(game.player.research_progress, 0)
+
+    def test_holiday_study_caps_inspiration_value(self):
+        game = GameEngine("tester")
+        game.start_game()
+        game.player.advisor = None
+        game.player.research_progress = 250
+
+        result = game.action_system.handlers["entertainment"].handle("4")
+
+        self.assertEqual(game.player.research_progress, 255)
+        self.assertIn("灵感+10", result)
+
+    def test_inspiration_burst_waits_for_research_direction(self):
+        game = GameEngine("tester")
+        game.start_game()
+        game.player.research_progress = 120
+        game.player.research_direction = None
+
+        game._trigger_inspiration_burst()
+
+        self.assertEqual(game.player.research_progress, 120)
+        self.assertEqual(len(game.research_system.ideas), 0)
+
+    def test_inspiration_burst_generates_raw_idea_without_resetting_literature_progress(self):
+        game = GameEngine("tester")
+        game.start_game()
+        game.player.research_unlocked = True
+        game.player.research_direction = ResearchDirection.ARCANE_ANALYSIS
+        game.player.research_progress = 100
+        game.player.sanity = 100
+        game.research_system.literature_progress = 42
+
+        with patch("game.research.ability_check", return_value=(CheckResult.SUCCESS, 1)), \
+             patch("game.research.random.choice", return_value=("测试灵感", "用于测试的灵感idea", 1)), \
+             patch("game.game_engine.random.randint", side_effect=[50, 5]):
+            game._trigger_inspiration_burst()
+
+        self.assertEqual(game.player.research_progress, 50)
+        self.assertEqual(game.player.sanity, 95)
+        self.assertEqual(game.research_system.literature_progress, 42)
+        self.assertEqual(len(game.research_system.ideas), 1)
+        self.assertEqual(game.research_system.ideas[0].status, IdeaStatus.RAW)
+        self.assertTrue(any("灵感爆发" in message for message in game.message_log))
+
+    def test_inspiration_burst_triggers_once_per_action_even_if_progress_remains_high(self):
+        game = GameEngine("tester")
+        game.start_game()
+        game.player.research_unlocked = True
+        game.player.research_direction = ResearchDirection.ARCANE_ANALYSIS
+        game.player.research_progress = 200
+        game.player.sanity = 100
+
+        with patch("game.research.ability_check", return_value=(CheckResult.SUCCESS, 1)), \
+             patch("game.research.random.choice", return_value=("测试灵感", "用于测试的灵感idea", 1)), \
+             patch("game.game_engine.random.random", return_value=1.0), \
+             patch("game.game_engine.random.randint", side_effect=[1, 5]):
+            self.assertTrue(game.do_action("3"))
+
+        self.assertEqual(game.player.research_progress, 199)
+        self.assertEqual(len(game.research_system.ideas), 1)
+
     def test_read_literature_generates_and_evaluates_idea_after_unlock(self):
         game = GameEngine("tester")
         game.start_game()

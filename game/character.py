@@ -165,7 +165,7 @@ class Player:
         self.research_direction: Optional[ResearchDirection] = None  # 研究方向
 
         # 研究相关
-        self.research_progress = 0  # 研究进度 0-100
+        self.research_progress = 0  # 灵感值，达到阈值后可触发灵感爆发
         self.research_unlocked = False  # 是否已通过研一课程解锁科研
         self.current_paper = None  # 当前论文
         self.papers_published = 0  # 已发表论文数

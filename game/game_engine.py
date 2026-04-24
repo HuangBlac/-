@@ -56,6 +56,7 @@ class GameEngine:
         self.turn_count = 0
         self.awaiting_idea_decision = False  # 是否正在等待idea评估决定
         self.awaiting_event_choice = False  # 是否正在等待事件选择
+        self.pending_event_choice = None
 
     def _init_npcs(self) -> dict:
         """初始化NPC"""
@@ -151,6 +152,10 @@ class GameEngine:
             self.awaiting_idea_decision = False
             return self._handle_idea_decision(action)
 
+        if self.awaiting_event_choice:
+            self.awaiting_event_choice = False
+            return self._handle_event_choice(action)
+
         # 退出
         if action == "q":
             self.game_state.game_over = True
@@ -162,14 +167,19 @@ class GameEngine:
             self.log(self.research_system.get_idea_status())
             return False
 
+        if not self.action_system.is_valid_action(action):
+            self.log("无效行动，请重新选择当前可用选项。")
+            return True
+
         # 消耗行动点
-        if not self.player.consume_action_point():
+        if not self.player.consume_action_point(self.player.advisor):
             if self._check_continue_work():
                 self.player.action_points += 1
-                self.player.consume_action_point()
+                self.player.consume_action_point(self.player.advisor)
             else:
                 self.log("本周行动点已用完！")
-                self._advance_week()
+                if not self._advance_week():
+                    return True
                 return not self.game_state.is_ended()
 
         self.turn_count += 1
@@ -190,24 +200,10 @@ class GameEngine:
                 self.awaiting_idea_decision = True
                 return True
             self.log(action_result)
+            if self.awaiting_event_choice:
+                return True
 
-        # 触发随机事件
-        self._trigger_random_event()
-
-        # 回合末检查灵感爆发。随机事件、假期活动等只负责积累灵感，爆发由引擎统一结算。
-        self._trigger_inspiration_burst()
-
-        # 应用异变效果
-        self.mutation_system.apply_mutation_effect(self.player, self.log)
-
-        # 检查行动点是否用完
-        if self.player.action_points <= 0:
-            self._advance_week()
-
-        # 检查游戏结束
-        self.game_state.check_game_over(self.player, self.graduation_thesis, self.log)
-
-        return not self.game_state.is_ended()
+        return self._continue_turn("after_action")
 
     def _check_continue_work(self) -> bool:
         """检查STR继续工作
@@ -223,26 +219,56 @@ class GameEngine:
                 return True
         return False
 
-    def _advance_week(self):
-        """推进一周"""
+    def _advance_week(self, skip_pressure: bool = False) -> bool:
+        """推进一周。"""
+        if not skip_pressure and self.player.advisor and self.player.advisor.personality_value >= 61:
+            pressure_event = self.advisor_system.trigger_pressure_event(self.player, self.event_system)
+            if pressure_event:
+                result = self.trigger_event(
+                    pressure_event,
+                    "导师事件",
+                    next_stage="advance_week",
+                )
+                if result:
+                    self.log(result)
+                if self.awaiting_event_choice:
+                    return False
+
         self.player.advance_week()
         self.player.reset_action_points()
         self.log(f"--- 第{self.player.year}学年 {self.player.semester_name} 第{self.player.week_in_semester}周 ---")
+        return True
 
     def _trigger_random_event(self):
         """触发随机事件"""
         is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
 
+        if is_holiday:
+            event_type = 'holiday' if random.random() < 0.7 else 'random'
+        else:
+            roll = random.random()
+            if roll < 0.2 and self.player.advisor:
+                event_type = 'advisor'
+            elif roll < 0.3:
+                event_type = random.choice(['academic', 'mythos', 'social', 'investigation'])
+            else:
+                event_type = 'random'
+
         if random.random() < 0.3:
-            event = self.event_system.get_random_event('random', self.player)
+            if event_type == 'advisor':
+                event = self.advisor_system.get_random_advisor_event(self.player, self.event_system)
+            else:
+                event = self.event_system.get_random_event(event_type, self.player)
             if event:
-                self.log(f"【随机事件】{event['title']}")
-                self.log(event['description'])
-                self.event_system.apply_event_effect(self.player, event)
-                followup = self.event_system.get_followup_event(event, self.player)
-                if followup:
-                    self.log(followup['description'])
-                    self.event_system.apply_event_effect(self.player, followup)
+                type_label = {
+                    'advisor': '导师事件',
+                    'holiday': '假期事件',
+                    'academic': '学术事件',
+                    'mythos': '神话事件',
+                    'social': '社交事件',
+                    'investigation': '调查事件',
+                }.get(event_type, '随机事件')
+                self.log(self.trigger_event(event, type_label, next_stage="after_random_event"))
 
     def _trigger_inspiration_burst(self):
         """回合末结算灵感爆发机制。"""
@@ -258,7 +284,8 @@ class GameEngine:
             return
 
         progress_loss = random.randint(1, 100)
-        sanity_loss = random.randint(3, 8)
+        sanity_mod = self.player.advisor.sanity_consumption_modifier if self.player.advisor else 1.0
+        sanity_loss = int(random.randint(3, 8) * sanity_mod)
         self.player.research_progress = max(0, self.player.research_progress - progress_loss)
         self.player.change_sanity(-sanity_loss)
 
@@ -337,6 +364,124 @@ class GameEngine:
             self.log("a=接受，d=丢弃，i=改进")
             self.awaiting_idea_decision = True
             return True
+
+    def trigger_event(self, event: dict, label: str, next_stage: str = "after_action", post_apply=None) -> str:
+        """触发并展示事件；如事件需要选择则进入等待状态。"""
+        if self.event_system.has_choices(event):
+            return self._queue_event_choice(event, label, next_stage, post_apply)
+        return self._apply_event_result(event, label, post_apply=post_apply)
+
+    def _queue_event_choice(self, event: dict, label: str, next_stage: str, post_apply=None) -> str:
+        """缓存待选择事件。"""
+        self.awaiting_event_choice = True
+        self.pending_event_choice = {
+            "event": event,
+            "label": label,
+            "next_stage": next_stage,
+            "post_apply": post_apply,
+        }
+
+        lines = [f"【{label}】{event['title']}", event["description"], "请选择："]
+        for idx, choice in enumerate(event.get("choices", []), 1):
+            lines.append(f"{idx}. {choice['text']} ({choice['id']})")
+        lines.append("请输入选项编号或id：")
+        return "\n".join(lines)
+
+    def _apply_event_result(self, event: dict, label: str, choice_id: str = None, post_apply=None) -> str:
+        """应用事件效果并返回文本。"""
+        lines = [f"【{label}】{event['title']}", event["description"]]
+
+        if choice_id:
+            choice = self.event_system.get_choice(event, choice_id)
+            if choice:
+                lines.append(f"你选择了：{choice['text']}")
+
+        effect_desc = self.event_system.apply_event_effect(self.player, event, choice_id)
+        if effect_desc and effect_desc != "无":
+            lines.append(f"效果：{effect_desc}")
+
+        followup = self.event_system.get_followup_event(event, self.player)
+        if followup:
+            lines.append(followup["description"])
+            followup_effect = self.event_system.apply_event_effect(self.player, followup)
+            if followup_effect and followup_effect != "无":
+                lines.append(f"效果：{followup_effect}")
+
+        if post_apply:
+            extra = post_apply(event, choice_id)
+            if extra:
+                lines.append(extra)
+
+        return "\n".join(lines)
+
+    def _handle_event_choice(self, action: str) -> bool:
+        """处理待选择事件输入。"""
+        pending = self.pending_event_choice
+        if not pending:
+            return self._continue_turn("after_action")
+
+        event = pending["event"]
+        choices = event.get("choices", [])
+        decision = action.strip().lower()
+        choice_id = None
+
+        if decision.isdigit():
+            index = int(decision) - 1
+            if 0 <= index < len(choices):
+                choice_id = choices[index]["id"]
+        else:
+            for choice in choices:
+                if choice["id"].lower() == decision:
+                    choice_id = choice["id"]
+                    break
+
+        if choice_id is None:
+            self.awaiting_event_choice = True
+            self.log("无效选择，请输入选项编号或id。")
+            self.log(self._queue_event_choice(
+                event,
+                pending["label"],
+                pending["next_stage"],
+                pending["post_apply"],
+            ))
+            return True
+
+        self.pending_event_choice = None
+        result = self._apply_event_result(
+            event,
+            pending["label"],
+            choice_id=choice_id,
+            post_apply=pending["post_apply"],
+        )
+        self.log(result)
+        return self._continue_turn(pending["next_stage"])
+
+    def _continue_turn(self, stage: str) -> bool:
+        """在选择事件后恢复被中断的回合结算。"""
+        if stage == "after_action":
+            self._trigger_random_event()
+            if self.awaiting_event_choice:
+                return True
+            stage = "after_random_event"
+
+        if stage == "after_random_event":
+            self._trigger_inspiration_burst()
+            self.mutation_system.apply_mutation_effect(self.player, self.log)
+
+            if self.player.action_points <= 0:
+                if not self._advance_week():
+                    return True
+
+            self.game_state.check_game_over(self.player, self.graduation_thesis, self.log)
+            return not self.game_state.is_ended()
+
+        if stage == "advance_week":
+            if not self._advance_week(skip_pressure=True):
+                return True
+            self.game_state.check_game_over(self.player, self.graduation_thesis, self.log)
+            return not self.game_state.is_ended()
+
+        return not self.game_state.is_ended()
 
     # ========== 公开接口 ==========
     @property

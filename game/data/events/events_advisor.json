@@ -76,52 +76,6 @@
       "effect": {"progress": 10}
     },
     {
-      "id": 110,
-      "title": "爆压事件",
-      "description": "导师对你施加了巨大压力，要求你必须在规定时间内完成研究。",
-      "type": "advisor",
-      "trigger_condition": "high_pressure",
-      "choices": [
-        {"id": "push", "text": "拼尽全力完成", "effect": {"progress": 20, "sanity": -15}},
-        {"id": "resist", "text": "适当抵抗", "effect": {"reputation": -5, "sanity": -5}}
-      ]
-    },
-    {
-      "id": 111,
-      "title": "假期取消",
-      "description": "导师取消了你的假期，要求你留在实验室工作。",
-      "type": "advisor",
-      "trigger_condition": "extreme",
-      "effect": {"sanity": -10}
-    },
-    {
-      "id": 112,
-      "title": "深夜电话",
-      "description": "导师深夜给你打电话，讨论一个'非常重要'的研究问题。",
-      "type": "advisor",
-      "trigger_condition": "extreme",
-      "effect": {"sanity": -8}
-    },
-    {
-      "id": 113,
-      "title": "奈亚的注视",
-      "description": "奈亚导师用那非人的眼睛注视着你，仿佛要看穿你的灵魂...",
-      "type": "advisor",
-      "trigger_condition": "nyarlathotep",
-      "effect": {"sanity": -20, "mutation": 0.05, "INT": 10}
-    },
-    {
-      "id": 114,
-      "title": "混沌的启示",
-      "description": "奈亚导师向你展示了宇宙的真相，那些知识让你窒息却又兴奋...",
-      "type": "advisor",
-      "trigger_condition": "nyarlathotep",
-      "choices": [
-        {"id": "accept", "text": "接受启示", "effect": {"sanity": -25, "EDU": 10, "INT": 15}},
-        {"id": "resist", "text": "拒绝启示", "effect": {"sanity": -10, "reputation": -5}}
-      ]
-    },
-    {
       "id": 115,
       "title": "导师讨论",
       "description": "你有机会和导师深入讨论研究问题，收获颇丰。",

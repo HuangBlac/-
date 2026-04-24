@@ -22,6 +22,7 @@ class EventSystem:
         event_files = {
             'random': 'events_random.json',
             'advisor': 'events_advisor.json',
+            'advisor_pressure': 'advisor_pressure_event.json',
             'academic': 'events_academic.json',
             'mythos': 'events_mythos.json',
             'social': 'events_social.json',
@@ -66,6 +67,7 @@ class EventSystem:
             available = self._filter_events(events, player)
             if available:
                 return random.choice(available)
+            return None
 
         return random.choice(events)
 
@@ -73,55 +75,85 @@ class EventSystem:
         """根据玩家状态筛选可用事件"""
         available = []
         for event in events:
-            # 检查是否有触发条件
-            trigger = event.get('trigger_condition')
-
-            # 检查requirements
-            req = event.get('requirement')
-            if req:
-                for key, value in req.items():
-                    if isinstance(value, str) and value.startswith(('>=', '>', '<=', '<')):
-                        op = value[:2] if value[1] in '=<>' else value[0]
-                        threshold = float(value[len(op):])
-                        player_val = getattr(player, key, 0)
-                        if op == '>=' and player_val < threshold:
-                            continue
-                        elif op == '>' and player_val <= threshold:
-                            continue
-                        elif op == '<=' and player_val > threshold:
-                            continue
-                        elif op == '<' and player_val >= threshold:
-                            continue
-                    else:
-                        # 向后兼容：数字表示 >=
-                        if key == 'sanity' and player.sanity > value:
-                            continue
-                        elif getattr(player, key, 0) < value:
-                            continue
-
-            # 根据导师状态筛选
-            if player.advisor:
-                # 爆压事件
-                if trigger == 'high_pressure' and player.advisor.personality_value < 61:
-                    continue
-                if trigger == 'extreme' and player.advisor.personality_value < 90:
-                    continue
-                if trigger == 'nyarlathotep' and not player.advisor.is_nyarrothotep:
-                    continue
-                if trigger == 'has_assistant' and not player.advisor.has_assistant:
-                    continue
-                if trigger == 'low_ability' and not player.advisor.requires_lateral_work:
-                    continue
-                if trigger == 'high_ability' and player.advisor.ability_value <= 60:
-                    continue
+            if not self._event_matches_requirements(event, player):
+                continue
+            if not self._event_matches_trigger(event, player):
+                continue
 
             available.append(event)
 
         return available
 
+    def _event_matches_requirements(self, event: Dict, player) -> bool:
+        """检查 requirement 字段。"""
+        req = event.get('requirement')
+        if not req:
+            return True
+
+        for key, value in req.items():
+            player_val = getattr(player, key, 0)
+
+            if isinstance(value, str) and value.startswith(('>=', '>', '<=', '<')):
+                op = value[:2] if len(value) > 1 and value[1] in '=<>' else value[0]
+                threshold = float(value[len(op):])
+                if op == '>=' and player_val < threshold:
+                    return False
+                if op == '>' and player_val <= threshold:
+                    return False
+                if op == '<=' and player_val > threshold:
+                    return False
+                if op == '<' and player_val >= threshold:
+                    return False
+                continue
+
+            # 向后兼容：数字 requirement 默认表示“至少达到该值”，
+            # sanity 继续使用“当前理智不高于阈值”的旧逻辑。
+            if key == 'sanity':
+                if player.sanity > value:
+                    return False
+            elif player_val < value:
+                return False
+
+        return True
+
+    def _event_matches_trigger(self, event: Dict, player) -> bool:
+        """检查 trigger_condition 字段。"""
+        trigger = event.get('trigger_condition')
+        if trigger in (None, 'always', 'normal', 'random', 'rare', 'periodic', 'weekly'):
+            return True
+
+        if trigger == 'low_progress':
+            return player.research_progress < 50
+        if trigger == 'high_progress':
+            return player.research_progress >= 100
+        if trigger == 'high_reputation':
+            return player.reputation >= 10
+        if trigger == 'low_reputation':
+            return player.reputation <= 0
+        if trigger == 'low_sanity':
+            return player.sanity <= 40
+        if trigger == 'mutation':
+            return player.mutation > 0
+        if trigger == 'research':
+            return bool(player.research_unlocked and player.research_direction)
+        if trigger == 'read':
+            return player.research_unlocked
+        if trigger == 'submit':
+            return bool(player.current_paper or player.papers_published > 0)
+        if trigger == 'investigation':
+            return True
+        if trigger == 'family_pressure':
+            return player.SOC < 50
+
+        return False
+
     def get_advisor_events(self, player) -> List[Dict]:
         """获取导师相关事件"""
-        return self._filter_events(self.events.get('advisor', []), player)
+        return self.events.get('advisor', [])
+
+    def get_advisor_pressure_events(self, player) -> List[Dict]:
+        """获取导师爆压事件。"""
+        return self.events.get('advisor_pressure', [])
 
     def get_academic_events(self, player) -> List[Dict]:
         """获取学术事件"""
@@ -142,6 +174,17 @@ class EventSystem:
     def get_holiday_events(self, player) -> List[Dict]:
         """获取假期事件"""
         return self._filter_events(self.events.get('holiday', []), player)
+
+    def has_choices(self, event: Dict) -> bool:
+        """事件是否包含选项。"""
+        return bool(event.get('choices'))
+
+    def get_choice(self, event: Dict, choice_id: str) -> Optional[Dict]:
+        """根据 choice id 获取选项。"""
+        for choice in event.get('choices', []):
+            if choice['id'] == choice_id:
+                return choice
+        return None
 
     def apply_event_effect(self, player, event: Dict, choice_id: str = None) -> str:
         """应用事件效果

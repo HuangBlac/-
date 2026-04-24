@@ -91,6 +91,46 @@
           "effect": {"EDU": 1, "sanity": -3}
         }
       ]
+    },
+    {
+      "id": 713,
+      "title": "工位摸鱼",
+      "description": "你在工位上偷偷刷了一个小时的社交媒体，导师路过时你迅速切回了论文界面。",
+      "type": "entertainment",
+      "effect": {"sanity": 4}
+    },
+    {
+      "id": 714,
+      "title": "天台吹风",
+      "description": "你爬上了实验楼的天台，一个人坐在那里吹风。远处的城市灯火让你暂时忘记了论文的压力。",
+      "type": "entertainment",
+      "effect": {"sanity": 7, "INT": 1},
+      "followup": [
+        {
+          "condition": {"research_direction": "OUTER_GOD"},
+          "description": "你注意到天空中有一颗星星的位置似乎不对，它不该出现在那个位置。",
+          "effect": {"sanity": -3, "progress": 5}
+        }
+      ]
+    },
+    {
+      "id": 715,
+      "title": "便利店觅食",
+      "description": "深夜的便利店里，你买了关东煮和啤酒，坐在窗边吃完。这点时间的安宁让你觉得自己还活着。",
+      "type": "entertainment",
+      "effect": {"sanity": 6, "STR": 1}
+    },
+    {
+      "id": 716,
+      "title": "偷听组会",
+      "description": "你没被通知参加这次组会，但路过会议室时还是驻足听了一会儿。你听到导师在表扬另一个同学。",
+      "type": "entertainment",
+      "trigger_condition": "high_pressure",
+      "effect": {"sanity": -2, "reputation": 1},
+      "choices": [
+        {"id": "leave", "text": "默默离开", "effect": {"sanity": 1}},
+        {"id": "dwell", "text": "在门外多站一会", "effect": {"sanity": -3, "progress": 3}}
+      ]
     }
   ]
 }

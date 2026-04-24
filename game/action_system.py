@@ -24,6 +24,15 @@ class ActionSystem:
         self.exam_done = False
         self.awaiting_course_selection = False
 
+    def is_valid_action(self, action: str) -> bool:
+        """Return whether the input matches a currently available action id."""
+        normalized = action.strip().lower()
+        if not normalized:
+            return False
+
+        valid_ids = {str(action_id).strip().lower() for action_id, _, _ in self.get_actions()}
+        return normalized in valid_ids
+
     def do_action(self, action: str, log_func) -> tuple:
         """Dispatch an action and return (message, should_continue)."""
         if self.awaiting_course_selection:
@@ -54,6 +63,9 @@ class ActionSystem:
         if action.lower() == "e":
             return ("__EVALUATE_IDEA__", True)
 
+        if action == "1":
+            return (self.handlers["entertainment"].handle(action), True)
+
         return (self.handlers["research"].handle(action), True)
 
     def get_actions(self) -> list:
@@ -69,10 +81,12 @@ class ActionSystem:
             actions.extend(self.handlers["entertainment"].get_available_actions())
         else:
             actions.extend(self.handlers["research"].get_available_actions())
+            actions.extend(self.handlers["entertainment"].get_available_actions())
 
         if self.player.year >= 3 and self.player.papers_published >= 1:
             actions.extend(self.handlers["graduation"].get_available_actions())
 
+        actions.extend(self.handlers["investigation"].get_available_actions())
         actions.extend(self.handlers["social"].get_available_actions())
         actions.append(("0", "状态", "查看当前状态"))
 

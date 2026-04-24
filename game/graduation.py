@@ -27,12 +27,21 @@ class GraduationThesis:
 
     def can_start(self) -> bool:
         """是否可以开始毕业论文"""
-        return self.player.papers_published >= 1
+        return self.player.papers_published >= self.required_papers
+
+    @property
+    def required_papers(self) -> int:
+        """开始毕业论文所需的小论文数量。"""
+        return getattr(self.player, "graduation_required_papers", 1)
+
+    def get_start_requirement_text(self) -> str:
+        """获取开始毕业论文的要求文案。"""
+        return f"需要至少{self.required_papers}篇小论文，当前{self.player.papers_published}篇"
 
     def start_thesis(self, title: str) -> str:
         """开始毕业论文"""
         if not self.can_start():
-            return "需要至少1篇小论文才能开始毕业论文！"
+            return f"{self.get_start_requirement_text()}，才能开始毕业论文！"
 
         if self.stage != ThesisStage.NOT_STARTED:
             return "毕业论文已经开始！"
@@ -107,8 +116,8 @@ class GraduationThesis:
         """获取毕业论文状态"""
         if self.stage == ThesisStage.NOT_STARTED:
             status = "毕业论文：未开始"
-            if self.player.papers_published < 1:
-                status += f"\n（需要至少1篇小论文，当前{self.player.papers_published}篇）"
+            if not self.can_start():
+                status += f"\n（{self.get_start_requirement_text()}）"
             return status
         else:
             return f"毕业论文：{self.stage.value}\n进度: {self.progress}%"

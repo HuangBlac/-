@@ -34,6 +34,12 @@ class ActionHandler(ABC):
     def log(self):
         return self.game.log
 
+    def _get_advisor_sanity_modifier(self) -> float:
+        """获取导师理智消耗修正。"""
+        if self.player.advisor:
+            return self.player.advisor.sanity_consumption_modifier
+        return 1.0
+
 
 class CourseActionHandler(ActionHandler):
     """Course-stage action handler."""
@@ -139,7 +145,7 @@ class CourseActionHandler(ActionHandler):
         if modified_attrs:
             result += "\n" + "\n".join(modified_attrs)
 
-        san_loss = random.randint(1, 3)
+        san_loss = int(random.randint(1, 3) * self._get_advisor_sanity_modifier())
         self.player.change_sanity(-san_loss)
         return result + f"\n理智-{san_loss}"
 
@@ -220,21 +226,60 @@ class EntertainmentActionHandler(ActionHandler):
     """Holiday and rest action handler."""
 
     def handle(self, action: str) -> str:
-        return self._do_holiday_activity(action)
+        from .character import SemesterType
+
+        is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
+        if is_holiday:
+            return self._do_holiday_activity(action)
+        return self._do_semester_entertainment()
 
     def get_available_actions(self) -> list:
-        return [
-            ("1", "旅游", "去外地旅游"),
-            ("2", "回家", "回老家探亲"),
-            ("3", "娱乐", "在宿舍娱乐"),
-            ("4", "学习", "继续学习"),
-            ("9", "休息", "好好休息"),
-        ]
+        from .character import SemesterType
+
+        is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
+        if is_holiday:
+            return [
+                ("1", "旅游", "去外地旅游"),
+                ("2", "回家", "回老家探亲"),
+                ("3", "娱乐", "在宿舍娱乐"),
+                ("4", "学习", "继续学习"),
+                ("9", "休息", "好好休息"),
+            ]
+        return [("1", "摸鱼", "偷闲片刻，恢复理智")]
+
+    def _do_semester_entertainment(self) -> str:
+        """Semester entertainment action driven by entertainment events."""
+        event_system = self.game.event_system
+        if not event_system:
+            self.player.change_sanity(1)
+            return "你发了一会呆，感觉稍微好了一点。\n理智+1"
+
+        event = self.game.advisor_system.get_random_entertainment_event(self.player, event_system)
+        if not event:
+            self.player.change_sanity(1)
+            return "你发了一会呆，感觉稍微好了一点。\n理智+1"
+
+        return self.game.trigger_event(
+            event,
+            "摸鱼",
+            next_stage="after_action",
+            post_apply=self._after_semester_entertainment_event,
+        )
+
+    def _after_semester_entertainment_event(self, event: dict, choice_id: str = None) -> str:
+        """Apply advisor-related adjustments after entertainment events resolve."""
+        return self.game.advisor_system.apply_entertainment_adjustments(
+            self.player,
+            event,
+            self.game.event_system,
+            choice_id,
+        )
 
     def _do_holiday_activity(self, action: str) -> str:
-        if self.player.advisor and self.player.advisor.personality_value >= 61:
-            if random.random() < 0.3:
-                return self._trigger_holiday_task()
+        if self.player.advisor:
+            holiday_event = self.game.advisor_system.trigger_holiday_event(self.player, self.game.event_system)
+            if holiday_event:
+                return self._trigger_holiday_event(holiday_event)
 
         holiday_options = {
             "1": ("旅游", 20, 0, 0),
@@ -247,12 +292,13 @@ class EntertainmentActionHandler(ActionHandler):
             return "无效选择，请重试"
 
         name, sanity, progress, str_bonus = holiday_options[action]
-        self.player.change_sanity(sanity)
+        sanity_modified = int(sanity / self._get_advisor_sanity_modifier())
+        self.player.change_sanity(sanity_modified)
         self.player.research_progress = min(255, max(0, self.player.research_progress + progress))
         if str_bonus:
             self.player.STR += str_bonus
 
-        result = f"你{name}了几天\n理智+{sanity}"
+        result = f"你{name}了几天\n理智+{sanity_modified}"
         if progress:
             result += f"，灵感+{progress}"
         if str_bonus:
@@ -274,22 +320,29 @@ class EntertainmentActionHandler(ActionHandler):
         if not event:
             return ""
 
-        lines = [f"\n【随机事件】{event['title']}", event["description"]]
-        event_system.apply_event_effect(self.player, event)
-        followup = event_system.get_followup_event(event, self.player)
-        if followup:
-            lines.append(followup["description"])
-            event_system.apply_event_effect(self.player, followup)
-        return "\n".join(lines)
+        return "\n" + self.game.trigger_event(event, "随机事件", next_stage="after_action")
 
-    def _trigger_holiday_task(self) -> str:
+    def _trigger_holiday_event(self, event: dict = None) -> str:
+        """触发假期事件（使用事件系统）。"""
+        event_system = self.game.event_system
+        if not event_system:
+            return self._trigger_holiday_task_fallback()
+
+        if event is None:
+            event = event_system.get_random_event("holiday", self.player)
+        if not event:
+            return self._trigger_holiday_task_fallback()
+
+        return self.game.trigger_event(event, "假期事件", next_stage="after_action")
+
+    def _trigger_holiday_task_fallback(self) -> str:
         tasks = [
             "导师在假期给你安排了任务",
             "导师要求你参加线上组会",
             "导师说有急事需要处理",
         ]
         task = random.choice(tasks)
-        san_loss = random.randint(10, 15)
+        san_loss = int(random.randint(10, 15) * self._get_advisor_sanity_modifier())
         progress = random.randint(5, 15)
 
         self.player.change_sanity(-san_loss)
@@ -309,7 +362,7 @@ class InvestigationActionHandler(ActionHandler):
 
     def _do_investigation(self) -> str:
         # TODO: Replace temporary logic with events_investigation.json.
-        san_loss = random.randint(3, 8)
+        san_loss = int(random.randint(3, 8) * self._get_advisor_sanity_modifier())
         int_gain = random.randint(3, 8)
         reputation_gain = random.randint(1, 5)
 
@@ -345,6 +398,8 @@ class SocialActionHandler(ActionHandler):
             self.player.relationships[target] = max(0, min(100, self.player.relationships[target] + favor_change))
 
         san_change = random.randint(-2, 3)
+        if san_change < 0:
+            san_change = int(san_change * self._get_advisor_sanity_modifier())
         self.player.change_sanity(san_change)
 
         return f"你与{target}交流了一会\n好感度变化 {favor_change:+d}，理智{san_change:+d}"
@@ -357,9 +412,11 @@ class GraduationActionHandler(ActionHandler):
         return self._do_graduation()
 
     def get_available_actions(self) -> list:
-        if self.player.year >= 3 and self.player.papers_published >= 1:
-            if self.game.graduation_thesis.stage.value == "未开始":
-                return [("8", "开题", "开始毕业论文")]
+        thesis = self.game.graduation_thesis
+        if self.player.year >= 3 and thesis.can_start():
+            if thesis.stage.value == "未开始":
+                description = f"开始毕业论文（需{thesis.required_papers}篇，当前{self.player.papers_published}篇）"
+                return [("8", "开题", description)]
             return [("8", "毕业论文", "继续毕业论文")]
         return []
 

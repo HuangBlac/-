@@ -156,6 +156,39 @@ class ResearchSystem:
         self.current_paper: Optional[Paper] = None
         self.literature_progress = 0  # 文献阅读进度 0-100
 
+    @staticmethod
+    def _has_enough_experiment_results(idea: Idea) -> bool:
+        """Return whether an idea has enough experiment support to stay mature."""
+        return len(idea.experiment_results) >= 2
+
+    def _refresh_idea_status(self, idea: Idea) -> None:
+        """Keep PRELIMINARY/MATURE in sync with experiment result count."""
+        if idea.status == IdeaStatus.RAW:
+            return
+
+        if self._has_enough_experiment_results(idea):
+            idea.status = IdeaStatus.MATURE
+        else:
+            idea.status = IdeaStatus.PRELIMINARY
+
+    def _get_mature_ideas(self) -> List[Idea]:
+        """Return ideas that still satisfy the mature-paper threshold."""
+        mature_ideas = []
+        for idea in self.ideas:
+            self._refresh_idea_status(idea)
+            if idea.status == IdeaStatus.MATURE:
+                mature_ideas.append(idea)
+        return mature_ideas
+
+    def _paper_has_valid_ideas(self, paper: Paper) -> bool:
+        """Check whether every idea inside the paper still has enough support."""
+        invalid_found = False
+        for idea in paper.ideas:
+            self._refresh_idea_status(idea)
+            if idea.status != IdeaStatus.MATURE:
+                invalid_found = True
+        return not invalid_found
+
     def can_start_research(self) -> bool:
         """是否可以开始科研（通过课程考试解锁）"""
         return getattr(self.player, "research_unlocked", False)
@@ -442,17 +475,22 @@ class ResearchSystem:
         result_msg.append(f"实验结果数: {len(idea.experiment_results)}")
 
         # 检查是否变为成熟想法
-        if len(idea.experiment_results) >= 2:
-            idea.status = IdeaStatus.MATURE
+        previous_status = idea.status
+        self._refresh_idea_status(idea)
+        if previous_status != IdeaStatus.MATURE and idea.status == IdeaStatus.MATURE:
             result_msg.append("idea已升级为成熟想法！")
 
         return "\n".join(result_msg)
 
     def write_draft(self, progress: int = 10) -> str:
         """撰写初稿"""
+        if self.current_paper and not self._paper_has_valid_ideas(self.current_paper):
+            self.current_paper.is_complete = False
+            return "当前论文依赖的成熟想法实验结果不足，请先补做实验再继续写作！"
+
         if not self.current_paper:
             # 创建新论文
-            mature_ideas = [i for i in self.ideas if i.status == IdeaStatus.MATURE]
+            mature_ideas = self._get_mature_ideas()
             if len(mature_ideas) < 3:
                 return f"需要3个成熟想法才能撰写论文！当前有{len(mature_ideas)}个。"
             self.current_paper = Paper(mature_ideas[:3])
@@ -478,6 +516,10 @@ class ResearchSystem:
         """
         if not self.current_paper or not self.current_paper.is_complete:
             return "没有完整的论文可以投稿！"
+
+        if not self._paper_has_valid_ideas(self.current_paper):
+            self.current_paper.is_complete = False
+            return "当前论文的实验结果支撑不足，请先补做实验再投稿！"
 
         # 使用SOC+EDU综合判定
         avg_ability = (self.player.SOC + self.player.EDU) // 2
@@ -533,6 +575,7 @@ class ResearchSystem:
                 for idea in self.current_paper.ideas[:2]:
                     if idea.experiment_results:
                         idea.experiment_results.pop()
+                    self._refresh_idea_status(idea)
                 result_msg.append("【大修】论文需要大修！不但大部分都得重写，好多结果也得重做了...")
             else:
                 # 拒稿

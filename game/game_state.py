@@ -70,7 +70,7 @@ class GameStateManager:
         # 超过研三
         elif player.year > 3:
             self.game_over = True
-            if player.papers_published >= 1 and graduation_thesis.stage.value != "未开始":
+            if graduation_thesis.can_start() and graduation_thesis.stage.value != "未开始":
                 self.ending = "毕业"
                 if player.mutation >= 1:
                     self._print_ending("graduation_high_mutation", player, log_func)

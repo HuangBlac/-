@@ -2,7 +2,17 @@
 import random
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, List, Optional
+
+
+ADVISOR_TRIGGER_CONDITIONS = {
+    "high_pressure",
+    "extreme",
+    "nyarlathotep",
+    "has_assistant",
+    "low_ability",
+    "high_ability",
+}
 
 
 class AdvisorPersonality(Enum):
@@ -240,55 +250,204 @@ class AdvisorSystem:
         req = self.advisor.graduation_requirement
         return f"你需要发表{req}篇论文才能毕业"
 
-    def trigger_pressure_event(self, player) -> Optional[str]:
-        """尝试触发爆压事件
+    @staticmethod
+    def is_advisor_trigger_condition(trigger: Optional[str]) -> bool:
+        """Return whether a trigger condition depends on advisor-specific rules."""
+        return trigger in ADVISOR_TRIGGER_CONDITIONS
+
+    def _matches_event_requirements(self, event: Dict, player) -> bool:
+        """Check event requirements for advisor-managed event selection."""
+        req = event.get("requirement")
+        if not req:
+            return True
+
+        for key, value in req.items():
+            player_val = getattr(player, key, 0)
+
+            if isinstance(value, str) and value.startswith((">=", ">", "<=", "<")):
+                op = value[:2] if len(value) > 1 and value[1] in "=<>" else value[0]
+                threshold = float(value[len(op):])
+                if op == ">=" and player_val < threshold:
+                    return False
+                if op == ">" and player_val <= threshold:
+                    return False
+                if op == "<=" and player_val > threshold:
+                    return False
+                if op == "<" and player_val >= threshold:
+                    return False
+                continue
+
+            if key == "sanity":
+                if player.sanity > value:
+                    return False
+            elif player_val < value:
+                return False
+
+        return True
+
+    def _matches_managed_trigger(self, trigger: Optional[str], player) -> bool:
+        """Check triggers that advisor-owned event selection is responsible for."""
+        if trigger in (None, "always", "normal", "random", "rare", "periodic", "weekly"):
+            return True
+        if trigger == "high_pressure":
+            return bool(player.advisor and player.advisor.personality_value >= 61)
+        if trigger == "extreme":
+            return bool(player.advisor and player.advisor.personality_value >= 90)
+        if trigger == "nyarlathotep":
+            return bool(player.advisor and player.advisor.is_nyarrothotep)
+        if trigger == "has_assistant":
+            return bool(player.advisor and player.advisor.has_assistant)
+        if trigger == "low_ability":
+            return bool(player.advisor and player.advisor.requires_lateral_work)
+        if trigger == "high_ability":
+            return bool(player.advisor and player.advisor.ability_value > 60)
+        if trigger == "low_progress":
+            return player.research_progress < 50
+        if trigger == "high_progress":
+            return player.research_progress >= 100
+        if trigger == "high_reputation":
+            return player.reputation >= 10
+        return False
+
+    def _get_matching_events(self, player, event_system, event_type: str, advisor_only: bool = False) -> List[Dict]:
+        """Load raw events and centralize advisor-related filtering here."""
+        if not event_system:
+            return []
+
+        matches = []
+        for event in event_system.get_events(event_type):
+            trigger = event.get("trigger_condition")
+            if advisor_only and not self.is_advisor_trigger_condition(trigger):
+                continue
+            if not self._matches_event_requirements(event, player):
+                continue
+            if not self._matches_managed_trigger(trigger, player):
+                continue
+            matches.append(event)
+        return matches
+
+    def get_advisor_events(self, player, event_system) -> List[Dict]:
+        """Return advisor event candidates with all advisor logic centralized here."""
+        return self._get_matching_events(player, event_system, "advisor")
+
+    def get_advisor_pressure_events(self, player, event_system) -> List[Dict]:
+        """Return advisor pressure event candidates with centralized filtering."""
+        return self._get_matching_events(player, event_system, "advisor_pressure")
+
+    def get_advisor_holiday_events(self, player, event_system) -> List[Dict]:
+        """Return holiday events that are specifically driven by advisor rules."""
+        return self._get_matching_events(player, event_system, "holiday", advisor_only=True)
+
+    def get_entertainment_events(self, player, event_system) -> List[Dict]:
+        """Return entertainment events with advisor triggers resolved here."""
+        return self._get_matching_events(player, event_system, "entertainment")
+
+    def get_random_advisor_event(self, player, event_system) -> Optional[dict]:
+        """Pick a regular advisor event."""
+        events = self.get_advisor_events(player, event_system)
+        if not events:
+            return None
+        return random.choice(events)
+
+    def trigger_pressure_event(self, player, event_system) -> Optional[dict]:
+        """尝试触发导师爆压事件。
 
         Args:
             player: 玩家对象
+            event_system: 事件系统实例
 
         Returns:
-            事件描述，如果未触发则返回None
+            事件字典，如果未触发则返回None
         """
-        if not self.advisor:
+        if not self.advisor or not event_system:
+            return None
+        if self.advisor.personality_value < 61:
             return None
 
-        # 奈亚提亚普有特殊事件
-        if self.advisor.is_nyarrothotep:
-            # 奈亚提亚普的爆压事件
-            events = [
-                "奈亚导师与你进行了一次深入的灵魂交流，你感觉世界观被完全颠覆了...",
-                "奈亚导师向你展示了宇宙的真相，你的理智获得了洗礼...",
-                "奈亚导师对你说：'你的研究很有趣，但还不够疯狂...'",
-            ]
-            self.pressure_events_triggered += 1
-            # 理智回满
-            player.sanity = 100
-            return f"【爆压事件】{random.choice(events)}\n理智已回满！"
+        if random.random() >= self.advisor.get_pressure_event_chance():
+            return None
 
-        # 普通导师爆压事件
-        chance = self.advisor.get_pressure_event_chance()
-        if random.random() < chance:
-            self.pressure_events_triggered += 1
+        pressure_events = self.get_advisor_pressure_events(player, event_system)
+        if not pressure_events:
+            return None
 
-            # 性格不同，事件不同
-            if self.advisor.personality_value >= 90:
-                events = [
-                    f"导师{self.advisor.name}打电话给你：'这个周末必须把实验结果发给我！'",
-                    f"导师{self.advisor.name}发来消息：'你的进度太慢了，明天来我办公室！'",
-                    f"导师{self.advisor.name}取消了你的假期：'这个假期你来做这个项目！'",
-                ]
-            else:
-                events = [
-                    f"导师{self.advisor.name}对你说：'你的研究思路有问题，需要大改！'",
-                    f"导师{self.advisor.name}在组会上批评了你：'这个月的进展不尽人意！'",
-                    f"导师{self.advisor.name}发来一封长邮件，列举了10个需要改进的地方...",
-                ]
+        self.pressure_events_triggered += 1
+        return random.choice(pressure_events)
 
-            # 爆压事件：理智回满，异常值增加
-            player.sanity = 100
-            # 异常值增加（这里暂时用mutation代表）
-            player.mutation += 0.05
+    def trigger_holiday_event(self, player, event_system) -> Optional[dict]:
+        """Try to trigger an advisor-interrupted holiday event."""
+        if not self.advisor or not event_system:
+            return None
 
-            return f"【爆压事件】{random.choice(events)}\n理智已回满！但你感觉有什么东西不一样了..."
+        if random.random() >= self.advisor.get_pressure_event_chance():
+            return None
 
-        return None
+        holiday_events = self.get_advisor_holiday_events(player, event_system)
+        if not holiday_events:
+            return None
+
+        return random.choice(holiday_events)
+
+    def get_random_entertainment_event(self, player, event_system) -> Optional[dict]:
+        """Pick an entertainment event while keeping advisor conditions centralized."""
+        entertainment_events = self.get_entertainment_events(player, event_system)
+        if not entertainment_events:
+            return None
+        return random.choice(entertainment_events)
+
+    def apply_entertainment_adjustments(self, player, event: Dict, event_system, choice_id: str = None) -> str:
+        """Apply advisor-specific aftermath for semester entertainment events."""
+        if not player.advisor:
+            return ""
+
+        notes = []
+        sanity_delta = self._get_positive_sanity_reduction(player, event, event_system, choice_id)
+        if sanity_delta > 0:
+            player.change_sanity(-sanity_delta)
+            notes.append(f"导师压力让你没能完全放松，理智-{sanity_delta}")
+
+        if player.advisor.personality_value >= 61 and random.random() < 0.15:
+            caught_san_loss = int(3 * player.advisor.sanity_consumption_modifier)
+            player.change_sanity(-caught_san_loss)
+            player.relationships["导师"] = max(0, player.relationships.get("导师", 50) - 2)
+            notes.append("【被抓包】导师路过时看到你在摸鱼")
+            notes.append(f"理智-{caught_san_loss}，导师好感-2")
+
+        return "\n".join(notes)
+
+    def _get_positive_sanity_reduction(self, player, event: Dict, event_system, choice_id: str = None) -> int:
+        """Return how much positive sanity recovery should be reduced by advisor pressure."""
+        advisor = player.advisor
+        if not advisor:
+            return 0
+
+        modifier = advisor.sanity_consumption_modifier
+        if modifier == 1.0:
+            return 0
+
+        total_reduction = self._get_effect_sanity_reduction(
+            self._get_event_effect(event, event_system, choice_id),
+            modifier,
+        )
+
+        followup = event_system.get_followup_event(event, player) if event_system else None
+        if followup:
+            total_reduction += self._get_effect_sanity_reduction(followup.get("effect", {}), modifier)
+
+        return total_reduction
+
+    @staticmethod
+    def _get_effect_sanity_reduction(effect: Dict, modifier: float) -> int:
+        sanity_gain = effect.get("sanity", 0)
+        if sanity_gain <= 0:
+            return 0
+        return sanity_gain - int(sanity_gain / modifier)
+
+    @staticmethod
+    def _get_event_effect(event: Dict, event_system, choice_id: str = None) -> Dict:
+        if choice_id and event_system:
+            choice = event_system.get_choice(event, choice_id)
+            if choice:
+                return choice.get("effect", {})
+            return {}
+        return event.get("effect", {})

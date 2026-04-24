@@ -239,12 +239,22 @@ class Player:
         action_map = {1: 2, 2: 3, 3: 4}
         return action_map.get(self.year, 3)
 
-    def consume_action_point(self) -> bool:
-        """消耗一次行动点，返回是否成功（行动点不足返回False）"""
-        if self.action_points > 0:
-            self.action_points -= 1
-            return True
-        return False
+    def consume_action_point(self, advisor=None) -> bool:
+        """消耗一次行动点，返回是否成功。"""
+        if self.action_points <= 0:
+            return False
+
+        if advisor and advisor.action_consumption_modifier > 1.0:
+            extra_cost_chance = advisor.action_consumption_modifier - 1.0
+            if random.random() < extra_cost_chance:
+                if self.action_points >= 2:
+                    self.action_points -= 2
+                    return True
+                self.action_points = 0
+                return True
+
+        self.action_points -= 1
+        return True
 
     def change_sanity(self, amount: int, force_mutation: bool = False) -> bool:
         """改变理智值

@@ -122,6 +122,14 @@
         {"id": "investigate", "text": "调查", "effect": {"EDU": 10, "sanity": -15, "INT": 10}},
         {"id": "ignore", "text": "忽略", "effect": {"sanity": -5}}
       ]
+    },
+    {
+      "id": 616,
+      "title": "假期取消",
+      "description": "导师正式通知你：这个假期取消，全部时间投入项目。",
+      "type": "holiday",
+      "trigger_condition": "extreme",
+      "effect": {"sanity": -15, "progress": 20}
     }
   ]
 }

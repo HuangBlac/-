@@ -68,6 +68,19 @@ class ActionSystem:
 
         return (self.handlers["research"].handle(action), True)
 
+    def get_blocking_message(self, action: str):
+        """Return a pre-execution validation message, or None if the action can run."""
+        if self.awaiting_course_selection:
+            return None
+
+        in_research = self.research_system.can_start_research()
+        is_holiday = self.player.semester in (SemesterType.SUMMER, SemesterType.WINTER)
+
+        if in_research and not is_holiday and action not in {"0", "1", "6", "7", "8"}:
+            return self.handlers["research"].get_blocking_message(action)
+
+        return None
+
     def get_actions(self) -> list:
         """Return currently available actions."""
         actions = []

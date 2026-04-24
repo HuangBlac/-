@@ -189,6 +189,37 @@ class ResearchSystem:
                 invalid_found = True
         return not invalid_found
 
+    def get_experiment_block_reason(self) -> Optional[str]:
+        """Return the reason experiment cannot proceed, or None if it can."""
+        ideas = [idea for idea in self.ideas if idea.status == IdeaStatus.PRELIMINARY]
+        if not ideas:
+            return "没有初步想法可以实验。\n请先通过阅读文献获得idea，然后评估为初步想法。"
+        return None
+
+    def get_write_draft_block_reason(self) -> Optional[str]:
+        """Return the reason draft writing cannot proceed, or None if it can."""
+        if self.current_paper and not self._paper_has_valid_ideas(self.current_paper):
+            self.current_paper.is_complete = False
+            return "当前论文依赖的成熟想法实验结果不足，请先补做实验再继续写作！"
+
+        if not self.current_paper:
+            mature_ideas = self._get_mature_ideas()
+            if len(mature_ideas) < 3:
+                return f"需要3个成熟想法才能撰写论文！当前有{len(mature_ideas)}个。"
+
+        return None
+
+    def get_submit_paper_block_reason(self) -> Optional[str]:
+        """Return the reason paper submission cannot proceed, or None if it can."""
+        if not self.current_paper or not self.current_paper.is_complete:
+            return "没有完整的论文可以投稿！"
+
+        if not self._paper_has_valid_ideas(self.current_paper):
+            self.current_paper.is_complete = False
+            return "当前论文的实验结果支撑不足，请先补做实验再投稿！"
+
+        return None
+
     def can_start_research(self) -> bool:
         """是否可以开始科研（通过课程考试解锁）"""
         return getattr(self.player, "research_unlocked", False)
@@ -484,15 +515,13 @@ class ResearchSystem:
 
     def write_draft(self, progress: int = 10) -> str:
         """撰写初稿"""
-        if self.current_paper and not self._paper_has_valid_ideas(self.current_paper):
-            self.current_paper.is_complete = False
-            return "当前论文依赖的成熟想法实验结果不足，请先补做实验再继续写作！"
+        block_reason = self.get_write_draft_block_reason()
+        if block_reason:
+            return block_reason
 
         if not self.current_paper:
             # 创建新论文
             mature_ideas = self._get_mature_ideas()
-            if len(mature_ideas) < 3:
-                return f"需要3个成熟想法才能撰写论文！当前有{len(mature_ideas)}个。"
             self.current_paper = Paper(mature_ideas[:3])
 
         # 增加初稿进度
@@ -514,12 +543,9 @@ class ResearchSystem:
 
         使用SOC+EDU综合判定
         """
-        if not self.current_paper or not self.current_paper.is_complete:
-            return "没有完整的论文可以投稿！"
-
-        if not self._paper_has_valid_ideas(self.current_paper):
-            self.current_paper.is_complete = False
-            return "当前论文的实验结果支撑不足，请先补做实验再投稿！"
+        block_reason = self.get_submit_paper_block_reason()
+        if block_reason:
+            return block_reason
 
         # 使用SOC+EDU综合判定
         avg_ability = (self.player.SOC + self.player.EDU) // 2

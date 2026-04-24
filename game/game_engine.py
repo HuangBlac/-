@@ -171,6 +171,11 @@ class GameEngine:
             self.log("无效行动，请重新选择当前可用选项。")
             return True
 
+        blocking_message = self.action_system.get_blocking_message(action)
+        if blocking_message:
+            self.log(blocking_message)
+            return True
+
         # 消耗行动点
         if not self.player.consume_action_point(self.player.advisor):
             if self._check_continue_work():

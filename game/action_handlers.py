@@ -173,6 +173,19 @@ class CourseActionHandler(ActionHandler):
 class ResearchActionHandler(ActionHandler):
     """Research-stage action handler."""
 
+    def get_blocking_message(self, action: str):
+        """Return a no-cost validation error before consuming an action point."""
+        action = action.lower()
+
+        if action == "3":
+            return self.game.research_system.get_experiment_block_reason()
+        if action == "4":
+            return self.game.research_system.get_write_draft_block_reason()
+        if action == "5":
+            return self.game.research_system.get_submit_paper_block_reason()
+
+        return None
+
     def handle(self, action: str) -> str:
         action = action.lower()
 
@@ -211,11 +224,13 @@ class ResearchActionHandler(ActionHandler):
         return actions
 
     def _do_experiment(self) -> str:
+        block_reason = self.game.research_system.get_experiment_block_reason()
+        if block_reason:
+            return block_reason
+
         from .research import IdeaStatus
 
         ideas = [idea for idea in self.game.research_system.ideas if idea.status == IdeaStatus.PRELIMINARY]
-        if not ideas:
-            return "没有初步想法可以实验。\n请先通过阅读文献获得idea，然后评估为初步想法。"
 
         idea = ideas[0]
         idea_index = self.game.research_system.ideas.index(idea)

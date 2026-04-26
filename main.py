@@ -49,7 +49,7 @@ def main_console():
     # 游戏主循环
     while not game.game_over:
         # 显示状态
-        game.display_status()
+        ui.print_lines(game.get_status_lines())
 
         # 显示菜单
         actions = game.get_actions()

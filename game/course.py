@@ -185,6 +185,44 @@ class CourseSystem:
 
         return active
 
+    def attend_class(self, player, advisor=None) -> str:
+        """Attend one active course and apply study rewards and sanity loss."""
+        active_courses = self.get_active_courses()
+        if not active_courses:
+            return "你已完成所有课程，可以开始科研了！"
+
+        course = random.choice(active_courses)
+        course.study_count += 1
+
+        difficulty = player.EDU + course.study_count * 10
+        roll = random.randint(1, 100)
+        modified_attrs = []
+
+        if roll == 1:
+            bonus = random.randint(2, 4)
+            for attr in ["INT", "SEN", "EDU", "STR"]:
+                if attr in course.attributes:
+                    setattr(player, attr, getattr(player, attr) + bonus)
+                    modified_attrs.append(f"{attr}+{bonus}")
+            result = f"【大成功】你对《{course.name}》有了突飞猛进的理解！"
+        elif roll < difficulty:
+            bonus = random.randint(1, 2)
+            for attr in ["INT", "SEN", "EDU", "STR"]:
+                if attr in course.attributes:
+                    setattr(player, attr, getattr(player, attr) + bonus)
+                    modified_attrs.append(f"{attr}+{bonus}")
+            result = f"你认真学习了{course.name}课程。"
+        else:
+            result = f"你上了{course.name}课，但感觉收获不大。"
+
+        if modified_attrs:
+            result += "\n" + "\n".join(modified_attrs)
+
+        sanity_modifier = advisor.sanity_consumption_modifier if advisor else 1.0
+        san_loss = int(random.randint(1, 3) * sanity_modifier)
+        player.change_sanity(-san_loss)
+        return result + f"\n理智-{san_loss}"
+
     def take_exam(self, course: Course, player) -> str:
         """参加考试（使用新判定系统）
 

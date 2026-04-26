@@ -66,3 +66,9 @@ class ConsoleUI:
         for key, value in data.items():
             print(f"  {key}: {value}")
         ConsoleUI.print_separator()
+
+    @staticmethod
+    def print_lines(lines: list[str]):
+        """Print a prepared list of lines."""
+        for line in lines:
+            print(line)

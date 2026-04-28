@@ -1,4 +1,4 @@
-"""Temporary side activity states for investigation and social actions."""
+"""Side activity states for investigation and social actions (JSON-driven)."""
 
 import random
 
@@ -8,46 +8,55 @@ from game.ui_messages import ui_text
 
 
 class InvestigationState(GameState):
-    """Temporary investigation state until the investigation event system is redesigned."""
+    """Investigation state — loads events from JSON."""
 
     @property
     def state_id(self) -> str:
         return "side.investigation"
 
     def get_available_actions(self, ctx) -> list:
-        return [ActionDef("6", "调查", "参与神秘调查")]
+        remaining = ctx.player.investigation_max_per_week - ctx.player.investigation_this_week
+        if remaining <= 0:
+            return []
+        return [ActionDef("6", "调查", f"进行神秘调查（本周剩余{remaining}次）")]
 
     def handle_action(self, ctx, action: str) -> StateResult:
         if action != "6":
             return StateResult(ui_text("invalid_action"))
-        return StateResult(self._do_investigation(ctx))
 
-    def _do_investigation(self, ctx) -> str:
-        # TODO: Replace this temporary logic with the redesigned investigation event system.
-        san_loss = int(random.randint(3, 8) * self._get_advisor_sanity_modifier(ctx))
-        int_gain = random.randint(3, 8)
-        reputation_gain = random.randint(1, 5)
+        ctx.player.investigation_this_week += 1
+        ctx.player.investigation_count += 1
 
-        ctx.player.change_sanity(-san_loss)
-        ctx.player.INT += int_gain
-        ctx.player.reputation += reputation_gain
+        events = ctx.event_system.get_investigation_events(ctx.player)
+        if not events:
+            return StateResult("你四处查看，但没有发现什么异常。")
 
-        events = [
-            "你在图书馆发现了一本禁书",
-            "你参加了校外的神秘聚会",
-            "你跟踪了一个可疑的邪教成员",
-            "你在实验室发现了奇怪的实验结果",
-        ]
-        return f"{random.choice(events)}\nINT+{int_gain}，声望+{reputation_gain}，理智-{san_loss}"
+        event = random.choice(events)
+        description = ctx.event_system.get_event_description(event, ctx.player)
 
-    def _get_advisor_sanity_modifier(self, ctx) -> float:
-        if ctx.player.advisor:
-            return ctx.player.advisor.sanity_consumption_modifier
-        return 1.0
+        output = f"【{event['title']}】\n\n{description}"
+
+        if ctx.event_system.has_choices(event):
+            return StateResult(
+                output,
+                push_state="input.event_choice",
+                state_data={"event": event},
+            )
+
+        effect_msg = ctx.event_system.apply_event_effect(ctx.player, event)
+        if effect_msg:
+            output += f"\n\n{effect_msg}"
+
+        # 硕士阶段：调查有30%概率获得科研灵感
+        if random.random() < 0.3:
+            ctx.player.research_progress += 5
+            output += "\n[你在调查中获得了一丝科研灵感]"
+
+        return StateResult(output)
 
 
 class SocialState(GameState):
-    """Temporary social state until NPC interaction design is expanded."""
+    """Social state — loads events from JSON with revelation-level support."""
 
     @property
     def state_id(self) -> str:
@@ -59,28 +68,29 @@ class SocialState(GameState):
     def handle_action(self, ctx, action: str) -> StateResult:
         if action != "7":
             return StateResult(ui_text("invalid_action"))
-        return StateResult(self._do_social(ctx))
 
-    def _do_social(self, ctx) -> str:
-        # TODO: Replace this temporary logic with the redesigned social/NPC event system.
-        targets = ["导师", "同门", "同门1", "同门2"]
-        target = random.choice(targets)
+        ctx.player.social_count += 1
 
-        favor_change = random.randint(-5, 10)
-        if target in ctx.player.relationships:
-            ctx.player.relationships[target] = max(
-                0,
-                min(100, ctx.player.relationships[target] + favor_change),
+        events = ctx.event_system.get_social_events(ctx.player)
+        if not events:
+            return StateResult("你环顾四周，没什么特别的社交机会。")
+
+        event = random.choice(events)
+        ctx.player.social_events_seen.add(event.get("id"))
+
+        description = ctx.event_system.get_event_description(event, ctx.player)
+
+        output = f"【{event['title']}】\n\n{description}"
+
+        if ctx.event_system.has_choices(event):
+            return StateResult(
+                output,
+                push_state="input.event_choice",
+                state_data={"event": event},
             )
 
-        san_change = random.randint(-2, 3)
-        if san_change < 0:
-            san_change = int(san_change * self._get_advisor_sanity_modifier(ctx))
-        ctx.player.change_sanity(san_change)
+        effect_msg = ctx.event_system.apply_event_effect(ctx.player, event)
+        if effect_msg:
+            output += f"\n\n{effect_msg}"
 
-        return f"你与{target}交流了一会\n好感度变化 {favor_change:+d}，理智{san_change:+d}"
-
-    def _get_advisor_sanity_modifier(self, ctx) -> float:
-        if ctx.player.advisor:
-            return ctx.player.advisor.sanity_consumption_modifier
-        return 1.0
+        return StateResult(output)

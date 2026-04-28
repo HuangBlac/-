@@ -177,6 +177,15 @@ class Player:
             "评审": 50,
         }
 
+        # 社交系统（新增）
+        self.social_count = 0               # 累计社交次数
+        self.social_events_seen = set()     # 已见过的社交事件ID（防重复）
+
+        # 硕士阶段调查系统（新增）
+        self.investigation_count = 0        # 累计调查次数
+        self.investigation_this_week = 0    # 本周已调查次数
+        self.investigation_max_per_week = 1 # 每周调查上限
+
         # 状态
         self.status = []  # 当前状态（如：疯狂、神志清醒）
 

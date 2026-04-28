@@ -248,3 +248,14 @@ class EventSystem:
                     continue
             return followup
         return None
+
+    def get_event_description(self, event: Dict, player) -> str:
+        """根据玩家异变状态返回事件描述。
+
+        如果事件定义了 description_mutated 且玩家异变值超过阈值，
+        返回异变描述；否则返回正常描述。
+        """
+        mutated_desc = event.get('description_mutated')
+        if mutated_desc and player.mutation >= event.get('mutation_threshold', float('inf')):
+            return mutated_desc
+        return event.get('description', '')

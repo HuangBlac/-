@@ -60,6 +60,7 @@ class TurnFlowController:
 
         self.engine.player.advance_week()
         self.engine.player.reset_action_points()
+        self.engine.player.investigation_this_week = 0
         self.engine.log(
             f"--- 第{self.engine.player.year}学年 "
             f"{self.engine.player.semester_name} "

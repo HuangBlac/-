@@ -18,10 +18,12 @@ class Idea:
     """创新想法"""
 
     def __init__(self, name: str, description: str, innovation: int,
-                 direction: ResearchDirection):
+                 direction: ResearchDirection, feasibility: int = 50):
         self.name = name
         self.description = description
         self.innovation = innovation  # 创新值 1-10
+        self.feasibility = max(1, min(100, feasibility))  # 可行性，默认隐藏
+        self.feasibility_evaluated = False
         self.direction = direction
         self.status = IdeaStatus.RAW
         self.experiment_results: List['ExperimentResult'] = []
@@ -159,7 +161,29 @@ class ResearchSystem:
     @staticmethod
     def _has_enough_experiment_results(idea: Idea) -> bool:
         """Return whether an idea has enough experiment support to stay mature."""
-        return len(idea.experiment_results) >= 2
+        return len(idea.experiment_results) >= 3
+
+    def _roll_initial_feasibility(self, innovation: int) -> int:
+        """Generate hidden feasibility for a fresh idea."""
+        academic_floor = (self.player.SEN + self.player.EDU) // 20
+        novelty_penalty = max(0, innovation - 5) * 4
+        base = 58 + academic_floor - novelty_penalty
+        return max(5, min(95, base + random.randrange(-20, 21)))
+
+    def _feasibility_margin(self) -> int:
+        """Return how vague the player's current feasibility estimate should be."""
+        academic_avg = (self.player.INT + self.player.SEN + self.player.EDU) // 3
+        paper_bonus = self.player.papers_published * 4
+        attribute_bonus = max(0, academic_avg - 45) // 3
+        return max(5, min(35, 35 - paper_bonus - attribute_bonus))
+
+    def get_feasibility_estimate(self, idea: Idea) -> str:
+        """Return a player-facing approximate feasibility range."""
+        margin = self._feasibility_margin()
+        low = max(1, idea.feasibility - margin)
+        high = min(100, idea.feasibility + margin)
+        idea.feasibility_evaluated = True
+        return f"{low}-{high}"
 
     def _refresh_idea_status(self, idea: Idea) -> None:
         """Keep PRELIMINARY/MATURE in sync with experiment result count."""
@@ -204,8 +228,8 @@ class ResearchSystem:
 
         if not self.current_paper:
             mature_ideas = self._get_mature_ideas()
-            if len(mature_ideas) < 3:
-                return f"需要3个成熟想法才能撰写论文！当前有{len(mature_ideas)}个。"
+            if len(mature_ideas) < 1:
+                return "需要1个完成3个实验成果的idea才能撰写论文！当前有0个。"
 
         return None
 
@@ -363,7 +387,8 @@ class ResearchSystem:
             return "【大失败】你的灵感坍缩成无法名状的噪声，精神受到了冲击...\n【异变+0.05】", roll
 
         # 创建idea
-        idea = Idea(name, desc, innovation, self.player.research_direction)
+        feasibility = self._roll_initial_feasibility(innovation)
+        idea = Idea(name, desc, innovation, self.player.research_direction, feasibility)
         self.ideas.append(idea)
         if affect_literature_progress:
             self.literature_progress = 0
@@ -383,7 +408,7 @@ class ResearchSystem:
 
         Args:
             idea_index: idea索引
-            decision: "discard"(丢弃), "improve"(改进), "accept"(接受)
+            decision: "discard"(丢弃), "polish"(打磨), "accept"(接受)
 
         Returns:
             评估结果
@@ -401,18 +426,29 @@ class ResearchSystem:
             self.ideas.remove(idea)
             return f"你放弃了这个idea。\n{attr}+{ability_gain}"
 
-        elif decision == "improve":
-            # 有待改进，进度重置，随机提升一个学术属性
-            idea.progress = 0
-            ability_gain = random.randint(1, 2)
-            attr = random.choice(["INT", "SEN", "EDU"])
-            setattr(self.player, attr, getattr(self.player, attr) + ability_gain)
-            return f"idea需要改进。\n{attr}+{ability_gain}，请继续研究"
+        elif decision in ("polish", "improve"):
+            # 打磨：提高可行性，但过度投入可能导致着迷。
+            old_feasibility = idea.feasibility
+            polish_gain = random.randint(4, 10) + self.player.EDU // 25
+            idea.feasibility = min(100, idea.feasibility + polish_gain)
+            idea.progress += polish_gain
+
+            result = [
+                "你打磨了这个idea，让它更接近可执行方案。",
+                f"可行性提升: {old_feasibility}->{idea.feasibility}",
+                f"当前评估区间: {self.get_feasibility_estimate(idea)}",
+            ]
+            obsession_chance = min(0.35, 0.06 + idea.innovation * 0.025)
+            if random.random() < obsession_chance:
+                mutation_gain = 0.03 if idea.innovation < 9 else 0.05
+                self.player.mutation += mutation_gain
+                result.append(f"你对这个idea有些着迷，开始忽略正常边界...【异变+{mutation_gain:.2f}】")
+            return "\n".join(result)
 
         elif decision == "accept":
-            # 接受为初步想法
+            # 接受为初步成果
             idea.status = IdeaStatus.PRELIMINARY
-            return f"你接受了这个idea作为初步想法！\n现在可以进行实验验证。"
+            return f"你接受了这个idea作为初步成果！\n现在需要通过实验凑齐3个有效成果。"
 
         return "无效的决定！"
 
@@ -437,12 +473,30 @@ class ResearchSystem:
         methods = EXPERIMENT_METHODS.get(self.player.research_direction, [])
         method_name, method_desc = random.choice(methods)
 
+        feasibility_roll = random.randint(1, 100)
+        if feasibility_roll > idea.feasibility:
+            san_loss = int(random.randint(2, 6) * sanity_mod)
+            self.player.change_sanity(-san_loss)
+            result_msg = [
+                f"【实验失败】可行性检验: {feasibility_roll}/{idea.feasibility}",
+                f"实验方法: {method_name}",
+                f"代码跑不通，数据也支撑不了这个想法...理智-{san_loss}",
+            ]
+            if feasibility_roll - idea.feasibility >= 35 or feasibility_roll >= 96:
+                idea.status = IdeaStatus.RAW
+                idea.experiment_results.clear()
+                idea.feasibility_evaluated = False
+                result_msg.append("更糟的是，实验几乎证明这个方法缺乏可行性。idea退回原始阶段，需要重新评估或打磨。")
+            else:
+                result_msg.append("这次实验没有产出有效成果，idea仍停留在初步成果阶段。")
+            return "\n".join(result_msg)
+
         # 使用综合属性进行判定（取三者的平均值作为能力值，应用效率修正）
         avg_ability = (self.player.INT + self.player.SEN + self.player.EDU) // 3
         avg_ability = int(avg_ability * efficiency_mod)
         check_result, roll = ability_check(self.player, "INT", avg_ability)
 
-        result_msg = [f"【实验验证】判定结果: {check_result} (骰点:{roll})"]
+        result_msg = [f"【实验验证】可行性检验: {feasibility_roll}/{idea.feasibility}，判定结果: {check_result} (骰点:{roll})"]
         result_msg.append(f"实验方法: {method_name}")
 
         if check_result == CheckResult.CRITICAL_SUCCESS:
@@ -509,7 +563,7 @@ class ResearchSystem:
         previous_status = idea.status
         self._refresh_idea_status(idea)
         if previous_status != IdeaStatus.MATURE and idea.status == IdeaStatus.MATURE:
-            result_msg.append("idea已升级为成熟想法！")
+            result_msg.append("已凑齐3个有效成果，idea已升级为成熟想法！")
 
         return "\n".join(result_msg)
 
@@ -522,7 +576,7 @@ class ResearchSystem:
         if not self.current_paper:
             # 创建新论文
             mature_ideas = self._get_mature_ideas()
-            self.current_paper = Paper(mature_ideas[:3])
+            self.current_paper = Paper(mature_ideas[:1])
 
         # 增加初稿进度
         writing_speed = random.randint(5, 15) + self.player.EDU // 10
@@ -638,5 +692,9 @@ class ResearchSystem:
         for i, idea in enumerate(self.ideas):
             status.append(f"{i}. {idea.name} ({idea.status.value})")
             status.append(f"   创新值: {idea.innovation}/10")
-            status.append(f"   实验结果: {len(idea.experiment_results)}个")
+            if idea.feasibility_evaluated:
+                status.append(f"   可行性评估: {self.get_feasibility_estimate(idea)}")
+            else:
+                status.append("   可行性: 未评估")
+            status.append(f"   有效成果: {len(idea.experiment_results)}/3")
         return "\n".join(status)

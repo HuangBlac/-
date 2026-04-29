@@ -23,10 +23,10 @@ class ResearchPhaseState(GameState):
         ]
         raw_ideas = [idea for idea in ctx.research_system.ideas if idea.status == IdeaStatus.RAW]
         if raw_ideas:
-            actions.append(ActionDef("E", "评估Idea", f"评估{len(raw_ideas)}个新idea"))
+            actions.append(ActionDef("E", "评估Idea", f"评估{len(raw_ideas)}个新idea的可行性"))
 
         actions.extend([
-            ActionDef("3", "实验验证", "进行实验获得结果"),
+            ActionDef("3", "实验验证", "进行实验获得有效成果"),
             ActionDef("4", "撰写论文", "改写论文初稿"),
             ActionDef("5", "投稿", "提交论文发表"),
         ])
@@ -122,7 +122,7 @@ class IdeaDecisionState(GameState):
         return "research.idea_decision"
 
     def get_available_actions(self, ctx) -> list:
-        return [ActionDef("input", "输入Idea决策", "格式如：1a、1d、1i", costs_action_point=False)]
+        return [ActionDef("input", "输入Idea决策", "格式如：1a、1d、1p", costs_action_point=False)]
 
     def on_enter(self, ctx, from_state=None) -> str:
         raw_ideas = self._raw_ideas(ctx)
@@ -134,13 +134,14 @@ class IdeaDecisionState(GameState):
             menu += f"{idx + 1}. {idea.name}\n"
             menu += f"   描述: {idea.description}\n"
             menu += f"   创新值: {idea.innovation}/10\n"
+            menu += f"   可行性: {ctx.research_system.get_feasibility_estimate(idea)}\n"
             menu += f"   方向: {idea.direction.value}\n\n"
 
         menu += "你可以选择:\n"
-        menu += "  a - 接受第1个idea为初步想法\n"
+        menu += "  a - 接受第1个idea为初步成果\n"
         menu += "  d - 丢弃第1个idea（增加能力值）\n"
-        menu += "  i - 第1个idea有待改进（继续研究）\n"
-        menu += "  2a/2d/2i - 评估第2个idea，以此类推\n"
+        menu += "  p - 打磨第1个idea（提高可行性，可能着迷）\n"
+        menu += "  2a/2d/2p - 评估第2个idea，以此类推\n"
         return menu + "\n" + ui_text("prompt_idea_decision")
 
     def handle_action(self, ctx, action: str) -> StateResult:
@@ -151,7 +152,7 @@ class IdeaDecisionState(GameState):
         decision = action.strip().lower()
         if len(decision) < 2:
             return StateResult(
-                "无效输入！格式如：1a（评估第1个idea，接受为初步想法）\na=接受，d=丢弃，i=改进",
+                "无效输入！格式如：1a（评估第1个idea，接受为初步成果）\na=接受，d=丢弃，p=打磨",
                 prompt=ui_text("prompt_idea_decision"),
             )
 
@@ -160,7 +161,7 @@ class IdeaDecisionState(GameState):
             choice = decision[-1]
         except ValueError:
             return StateResult(
-                "无效输入！格式如：1a（评估第1个idea）\na=接受，d=丢弃，i=改进",
+                "无效输入！格式如：1a（评估第1个idea）\na=接受，d=丢弃，p=打磨",
                 prompt=ui_text("prompt_idea_decision"),
             )
 
@@ -170,10 +171,10 @@ class IdeaDecisionState(GameState):
                 prompt=ui_text("prompt_idea_decision"),
             )
 
-        decision_map = {"a": "accept", "d": "discard", "i": "improve"}
+        decision_map = {"a": "accept", "d": "discard", "p": "polish", "i": "polish"}
         if choice not in decision_map:
             return StateResult(
-                "无效决定！a=接受，d=丢弃，i=改进",
+                "无效决定！a=接受，d=丢弃，p=打磨",
                 prompt=ui_text("prompt_idea_decision"),
             )
 

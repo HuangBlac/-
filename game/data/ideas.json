@@ -12,24 +12,41 @@
   "MYTHOS_RITUAL": [
     {"name": "文本溯源分析", "description": "通过文本比对确定古籍抄写年代", "innovation": 7},
     {"name": "失传语言破译", "description": "破解古代祭祀用语的含义", "innovation": 8},
+    {"name": "拉来耶文本分析", "description": "根据考古发现重建古代仪式工具", "innovation": 6},
+    {"name": "玄君七章", "description": "分析古代祭祀场所的空间布局与功能", "innovation": 5},
+    {"name": "死灵之书", "description": "分析古代死灵法术的原理与应用", "innovation": 7},
+    {"name": "黄衣之主", "description": "研究古代祭祀服饰的象征意义", "innovation": 6},
+    {"name": "现代星相与仪式", "description": "解读古代神话传说的历史背景、人物性格、故事内容", "innovation": 8},
     {"name": "仪式流程重建", "description": "还原古代召唤仪式的完整步骤", "innovation": 9},
     {"name": "神话地理考证", "description": "比对神话地点与现实地理位置", "innovation": 6},
     {"name": "预言文本解读", "description": "分析预言文本的模糊性特征", "innovation": 8}
   ],
   "DEITY_RACE": [
-    {"name": "跨种族交流", "description": "探索与神话生物沟通的可能性", "innovation": 9},
+    {"name": "跨种族交流", "description": "探索与神话生物沟通的可能性", "innovation": 10},
     {"name": "神话生物分类学", "description": "建立神话生物的分类学体系", "innovation": 8},
     {"name": "附庸种族演化", "description": "研究神明附庸种族的进化历程", "innovation": 6},
     {"name": "深潜者社会结构", "description": "研究深潜者种群的社会组织形式", "innovation": 5},
     {"name": "星之彩结构分析", "description": "分析星之彩的生理结构与生态习性", "innovation": 5},
-    {"name": "钻地蠕虫", "description": "研究神话生物在生态系统中的角色", "innovation": 4}
+    {"name": "钻地蠕虫", "description": "研究神话生物在生态系统中的角色", "innovation": 4},
+    {"name": "寻血延根猎犬", "description": "分析神话生物的基因组特征", "innovation": 7},
+    {"name": "黑山羊幼崽", "description": "研究神话生物与人类历史的交集", "innovation": 6}
   ],
   "OUTER_GOD": [
+    {"name": "超维度拓扑学与神祇嵌入理论", "description": "将外神定义为高维流形在三维空间中的“降维投影”，用Chern-Simons理论等数学工具，表现为一个“无法被简单闭合的奇怪吸引子”", "innovation": 10},
     {"name": "纬度入侵理论", "description": "研究旧日支配者跨越维度的入侵机制", "innovation": 10},
-    {"name": "阿撒托斯梦境机制", "description": "浮世乃幻梦，余生皆芥子", "innovation": 9},
-    {"name": "混沌模型", "description": "建立描述阿撒托斯周围混沌能量的数学模型", "innovation": 8},
-    {"name": "旧日支配者意识探查", "description": "通过量子纠缠探测古神意识场", "innovation": 9},
-    {"name": "奈亚拉托提普心理分析", "description": "分析外神的思维模式与动机", "innovation": 9}, 
-    {"name": "旧日支配者外显形象分析", "description": "分析旧日支配者的外显形象为什么是触手", "innovation": 5}
+    {"name": "阿撒托斯的万有梦境：作为非良基宇宙范畴的终对象", "description": "利用范畴论构建神祇之间的关系网络模型", "innovation": 9},
+    {"name": "语言智能", "description": "基于维克根斯坦语言智能理论对于神明信息理论解读可能性分析", "innovation": 9},
+    {"name": "噪声即知识", "description": "基于禁忌知识理论，对于现有体系的破坏性革命，噪声就是知识", "innovation": 9},
+    {"name": "宇宙本底噪声建模", "description": "基于随机微分方程和非交换几何理论对于阿撒托斯宇宙观的建构", "innovation": 9},
+    {"name": "全知结构的逻辑基础", "description": "是否存在一种超越ZFC公理体系（策梅洛-弗兰克尔集合论+选择公理）的“犹格·索托斯公理", "innovation": 9},
+    {"name": "阿撒托斯梦境机制", "description": "浮世乃幻梦，余生皆芥子——阿式宇宙概念概论", "innovation": 9},
+    {"name": "无规律下的规律涌现", "description": "基于数值逼近理论与近似理论，对于基于阿式宇宙下规律涌现", "innovation": 8},
+    {"name": "旧神模拟稳定性理论", "description": "基于微分方程数值解稳定性理论，对于现有的阿撒托斯-犹格索托斯宇宙观的模拟系统的崩溃现象进行分析", "innovation": 7},
+    {"name": "周期混沌蕴含三", "description": "从非线性非交换非欧式系统延伸出的非规律系统的研究", "innovation": 6},
+    {"name": "生育场与分形结构", "description": "基于分形结构与动力系统理论对于黑山羊之母的繁殖现象进行描述", "innovation": 8},
+    {"name": "奈亚拉托提普混沌行走模型", "description": "利用非线性动力学，遍历理论，深度学习扩散模型，对于奈亚提亚普现身形象进行描述", "innovation": 7},
+    {"name": "旧日支配者意识探查", "description": "通过量子纠缠探测古神意识场", "innovation": 7},
+    {"name": "基于信息论的夸切乌陶斯横纹分析", "description": "夸切乌陶斯的肢体残缺是信息纠错码假设理论", "innovation": 6},
+    {"name": "旧日支配者外显形象分析", "description": "基于高维流形投影理论，分析旧日支配者的外显形象为什么是触手", "innovation": 5}
   ]
 }

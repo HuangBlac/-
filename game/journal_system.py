@@ -384,7 +384,12 @@ class JournalSystem:
         if idx + 1 >= len(order):
             return None
         next_id = order[idx + 1]
-        return self._tiers.get("tiers", {}).get(next_id)
+        tier = self._tiers.get("tiers", {}).get(next_id)
+        if tier is None:
+            return None
+        tier = dict(tier)
+        tier["id"] = next_id
+        return tier
 
     def _apply_publication(self, tier_id: str, tier_name: str) -> None:
         tiers = self._tiers.get("tiers", {})

@@ -194,7 +194,7 @@ mutation_gain = round(truth_gain * 0.01, 2)
 | `Paper` | 论文统计数据（创新值、实验三维） |
 | `EventFlowController` | 异常事件推入 `input.event_choice` |
 | `EventSystem` | 事件效果应用 |
-| `StateMachine` | 新增 `research.submission_target` 和 `research.review_result` 状态 |
+| `StateMachine` | 新增 `research.submission_target` 状态（判定结果通过 `pop_state` 携带文本回到 `research.phase`，未引入独立 `research.review_result`） |
 | `AdvisorSystem` | 导师属性读取（能力值、是否为超凡生物） |
 
 ## 7. Tuning Knobs
@@ -224,32 +224,33 @@ mutation_gain = round(truth_gain * 0.01, 2)
 ## 8. Acceptance Criteria
 
 ### 8.1 数据层
-- [ ] `game/data/journal_tiers.json` 可被 `json.load` 正常解析
-- [ ] `game/data/review_anomaly_events.json` 可被 `json.load` 正常解析
-- [ ] 两个 JSON 均有基本的 schema 验证测试
+- [x] `game/data/journal_tiers.json` 可被 `json.load` 正常解析
+- [x] `game/data/review_anomaly_events.json` 可被 `json.load` 正常解析
+- [x] 两个 JSON 均有基本的 schema 验证测试（`test_journal_system.py` 中 7 个 schema 测试覆盖必填字段、阈值递减、权重和=1、事件 ID 唯一）
 
 ### 8.2 评分层
-- [ ] `calculate_innovation_score` 对已知输入返回预期值（单元测试）
-- [ ] `calculate_experiment_score` 对已知输入返回预期值（单元测试）
-- [ ] `calculate_reputation_score` 对已知输入返回预期值（单元测试）
-- [ ] `calculate_tier_score` 综合分权重计算正确（单元测试）
+- [x] `calculate_innovation_score` 对已知输入返回预期值（单元测试）
+- [x] `calculate_experiment_score` 对已知输入返回预期值（单元测试）
+- [x] `calculate_reputation_score` 对已知输入返回预期值（单元测试）
+- [x] `calculate_tier_score` 综合分权重计算正确（单元测试）
 
 ### 8.3 投稿判定层
-- [ ] 硬门槛不足时 `can_submit_to` 返回 `False` 和原因（单元测试）
-- [ ] 每种判定结果（直接接受/小修/降档/大修/拒稿/Desk Reject）均有覆盖（单元测试）
-- [ ] 降档规则正确执行（单元测试）
+- [x] 硬门槛不足时 `can_submit_to` 返回 `False` 和原因（单元测试）
+- [x] 每种判定结果（直接接受/小修/降档/大修/拒稿/Desk Reject）均有覆盖（单元测试）
+- [x] 降档规则正确执行（单元测试 `test_top_downgrades_to_disciplinary` 等）
 
 ### 8.4 状态流层
-- [ ] `research.phase` action "5" 进入 `research.submission_target`
-- [ ] `research.submission_target` 展示当前论文评分
-- [ ] `research.submission_target` 选择目标后进入 `research.review_result`
-- [ ] `research.review_result` 展示判定结果并返回 `research.phase`
+- [x] `research.phase` action "5" 进入 `research.submission_target`
+- [x] `research.submission_target` 展示当前论文评分（四维分数 + 五层期刊门槛）
+- [x] `research.submission_target` 选择目标后调用 `journal_system.review_paper()`，结果文本通过 `StateResult(result, pop_state=True)` 返回，再回到 `research.phase`
+
+> 注：实际实现未引入独立的 `research.review_result` 状态，判定结果作为消息文本随 `pop_state` 直接呈现。GDD 原方案中第 4 项已被简化方案替代。
 
 ### 8.5 异常事件层
-- [ ] `get_anomaly_chance` 返回概率在 `[0, 0.45]` 范围内（单元测试）
-- [ ] 触发异常事件后通过 `EventFlowController` 正确推入 `input.event_choice`
-- [ ] 事件效果正确应用到玩家属性
+- [x] `get_anomaly_chance` 返回概率在 `[0, 0.45]` 范围内（单元测试 `test_capped_at_max`）
+- [ ] 触发异常事件后通过 `EventFlowController` 正确推入 `input.event_choice`（**仍待实现**：当前 `roll_anomaly_event` 选出事件 dict，但 `review_paper` 仅将其挂在 `result["anomaly_event"]`，未推入 flow）
+- [ ] 事件效果正确应用到玩家属性（**仍待实现**：`sanity_min/max`、`mutation_min/max`、`truth_gain` 还没有写回 `Player`）
 
 ### 8.6 端到端
-- [ ] Console 模式可完成：撰写论文 -> 投稿 -> 选择期刊 -> 查看结果 -> 返回科研状态
-- [ ] `python -m unittest discover` 全部通过
+- [x] Console 模式可完成：撰写论文 -> 投稿 -> 选择期刊 -> 查看结果 -> 返回科研状态
+- [x] `python -m unittest discover` 全部通过（截至 2026-05-01，45 项测试全绿）

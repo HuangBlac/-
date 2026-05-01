@@ -113,7 +113,10 @@ class StateActionExecutor:
         """Return whether the action belongs to the research phase state."""
         if not self.uses_research_state_machine():
             return False
-        self.sync_state("research.phase")
+        current_id = self.engine.state_machine.current.state_id
+        # 如果已经在 research 子状态（如 submission_target），不要强制切回 phase
+        if not current_id.startswith("research."):
+            self.sync_state("research.phase")
         return self.normalize_action(action) in self.current_state_action_ids()
 
     def is_holiday_state_action(self, action: str) -> bool:
@@ -150,7 +153,10 @@ class StateActionExecutor:
     def is_temporary_input_state(self) -> bool:
         """Return whether the current state is a no-cost temporary input state."""
         current_id = self.engine.state_machine.current.state_id
-        return current_id.startswith("input.") or current_id == "research.idea_decision"
+        return current_id.startswith("input.") or current_id in (
+            "research.idea_decision",
+            "research.submission_target",
+        )
 
     def do_temporary_input_action(self, action: str) -> bool:
         """Handle no-cost temporary input states and resume any deferred flow."""
@@ -174,9 +180,12 @@ class StateActionExecutor:
 
     def do_research_state_action(self, action: str) -> bool:
         """Handle research-stage input through the state machine."""
+        current_id = self.engine.state_machine.current.state_id
+        # 如果已经在 research 子状态（如 submission_target），不要强制切回 phase
+        target = "research.phase" if not current_id.startswith("research.") else ""
         return self.run_state_action(
             action,
-            target_state="research.phase",
+            target_state=target,
             consume_action_point=True,
             continue_stage="after_action",
             stop_on_temporary=True,

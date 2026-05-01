@@ -10,16 +10,15 @@ class ActionMenuProvider:
     def get_actions(self) -> list:
         """Return the merged action menu for the current game situation."""
         actions = self._current_phase_actions()
-        self._append_unique(actions, self._graduation_actions())
-        self._append_unique(actions, self._side_actions())
+        if not self.engine.state_actions.is_temporary_input_state():
+            self._append_unique(actions, self._graduation_actions())
+            self._append_unique(actions, self._side_actions())
         self._append_system_actions(actions)
         return actions
 
     def _current_phase_actions(self) -> list:
         if self.engine.state_actions.is_temporary_input_state():
-            actions = self._state_machine_actions()
-            actions.append(("0", "状态", "查看当前状态"))
-            return actions
+            return self._state_machine_actions()
 
         if self.engine.state_actions.uses_course_state_machine() or self.engine.state_actions.is_course_selection_input_state():
             self.engine.state_actions.sync_course_state()
@@ -28,7 +27,9 @@ class ActionMenuProvider:
             return actions
 
         if self.engine.state_actions.uses_research_state_machine():
-            self.engine.state_actions.sync_state("research.phase")
+            current_id = self.engine.state_machine.current.state_id
+            if not current_id.startswith("research."):
+                self.engine.state_actions.sync_state("research.phase")
             return self._state_machine_actions()
 
         if self.engine.state_actions.uses_holiday_state_machine():

@@ -88,9 +88,25 @@ def _parse_experiment_methods(raw: dict) -> Dict[ResearchDirection, List[tuple]]
 # 加载数据文件
 _IDEAS_POOL_RAW = _load_json_data("ideas.json")
 _EXPERIMENT_METHODS_RAW = _load_json_data("experiment_methods.json")
+_JOURNAL_TIERS_RAW = _load_json_data("journal_tiers.json")
 
 IDEAS_POOL = _parse_ideas_pool(_IDEAS_POOL_RAW)
 EXPERIMENT_METHODS = _parse_experiment_methods(_EXPERIMENT_METHODS_RAW)
+JOURNAL_TIERS = _JOURNAL_TIERS_RAW.get("tiers", {})
+SCORING_WEIGHTS = _JOURNAL_TIERS_RAW.get("scoring_weights", {
+    "innovation": 0.42, "experiment": 0.38, "reputation": 0.20
+})
+REVIEW_BONUS = _JOURNAL_TIERS_RAW.get("review_bonus", {
+    "social_review_formula": "((SOC + EDU) // 2 - 55) * 0.25",
+    "roll_range": [-10, 10]
+})
+OUTCOME_THRESHOLDS = _JOURNAL_TIERS_RAW.get("outcome_thresholds", {
+    "direct_accept": 10, "minor_revision": 0, "downgrade": -10, "major_revision": -20
+})
+MIN_SUBMISSION_SCORE = _JOURNAL_TIERS_RAW.get("min_submission_score", 30)
+
+# 层级顺序（用于降档）
+TIER_ORDER = ["top", "disciplinary", "good", "water", "school"]
 
 
 class Paper:
@@ -157,6 +173,9 @@ class ResearchSystem:
         self.ideas: List[Idea] = []  # 所有idea
         self.current_paper: Optional[Paper] = None
         self.literature_progress = 0  # 文献阅读进度 0-100
+        # 延迟导入避免循环依赖
+        from .journal_system import JournalSystem
+        self.journal_system = JournalSystem(player)
 
     @staticmethod
     def _has_enough_experiment_results(idea: Idea) -> bool:
@@ -592,8 +611,39 @@ class ResearchSystem:
 
         return result
 
+    def calculate_submission_scores(self) -> dict:
+        """计算投稿三维分数与综合分，委托给 JournalSystem。"""
+        if not self.current_paper:
+            return {
+                "innovation": 0, "experiment": 0, "reputation": 0, "tier": 0,
+            }
+        breakdown = self.journal_system.get_score_breakdown(self.current_paper)
+        return {
+            "innovation": breakdown["innovation_score"],
+            "experiment": breakdown["experiment_score"],
+            "reputation": breakdown["reputation_score"],
+            "tier": breakdown["tier_score"],
+        }
+
+    def _get_all_tiers_display(self, scores: dict) -> list[tuple[str, dict, bool]]:
+        """返回所有层级及其是否可选的状态（用于展示）。"""
+        result = []
+        for tier_id in TIER_ORDER:
+            config = JOURNAL_TIERS.get(tier_id)
+            if not config:
+                continue
+            can, _ = self.journal_system.can_submit_to(
+                tier_id,
+                tier_score=scores["tier"],
+                innovation_score=scores["innovation"],
+                experiment_score=scores["experiment"],
+                reputation_score=scores["reputation"],
+            )
+            result.append((tier_id, config, can))
+        return result
+
     def submit_paper(self) -> str:
-        """投稿论文（使用新判定系统）
+        """投稿论文（使用旧判定系统，保留用于兼容和直接调用场景）。
 
         使用SOC+EDU综合判定
         """
@@ -673,6 +723,70 @@ class ResearchSystem:
             self.current_paper = None
 
         return "\n".join(result_msg)
+
+    def submit_to_tier(self, tier_id: str) -> str:
+        """投稿到指定的期刊层级（使用 JournalSystem 的新判定流程）。"""
+        block_reason = self.get_submit_paper_block_reason()
+        if block_reason:
+            return block_reason
+
+        scores = self.journal_system.get_score_breakdown(self.current_paper)
+        result = self.journal_system.review_paper(
+            tier_id,
+            tier_score=scores["tier_score"],
+            innovation_score=scores["innovation_score"],
+            experiment_score=scores["experiment_score"],
+            reputation_score=scores["reputation_score"],
+        )
+
+        outcome = result["outcome"]
+        lines = [result["message"]]
+        tiers = self.journal_system._tiers.get("tiers", {})
+
+        if outcome in ("direct_accept", "minor_revision"):
+            tier = tiers.get(tier_id, {})
+            tier_name = tier.get("name", tier_id)
+            self.journal_system._apply_publication(tier_id, tier_name)
+            lines.append(self.journal_system._format_publication_rewards())
+            self._clear_paper()
+        elif outcome == "downgrade":
+            down = self.journal_system._get_downgrade_tier(tier_id)
+            if down:
+                down_id = list(tiers.keys())[list(tiers.values()).index(down)] if down in tiers.values() else None
+                # _get_downgrade_tier 返回的是 tier dict, id 需要从 order 中获取
+                order = ["top", "disciplinary", "good", "water", "school"]
+                idx = order.index(tier_id)
+                down_id = order[idx + 1] if idx + 1 < len(order) else None
+                if down_id:
+                    down_name = down.get("name", down_id)
+                    self.journal_system._apply_publication(down_id, down_name)
+                    lines.append(self.journal_system._format_publication_rewards())
+                    self._clear_paper()
+                else:
+                    self.journal_system._apply_rejection_sanity_loss()
+                    lines.append("连学报都无法发表，论文被拒稿。")
+                    self._clear_paper()
+            else:
+                self.journal_system._apply_rejection_sanity_loss()
+                lines.append("连学报都无法发表，论文被拒稿。")
+                self._clear_paper()
+        elif outcome == "major_revision":
+            self.current_paper.draft_progress = random.randint(30, 60)
+            self.current_paper.is_complete = False
+            all_results = [
+                (idea, r) for idea in self.current_paper.ideas for r in idea.experiment_results
+            ]
+            if all_results:
+                idea, _ = random.choice(all_results)
+                if idea.experiment_results:
+                    idea.experiment_results.pop(random.randrange(len(idea.experiment_results)))
+                    self._refresh_idea_status(idea)
+            lines.append("论文进度回退，部分实验结果被移除。")
+        elif outcome in ("reject", "desk_reject"):
+            self.journal_system._apply_rejection_sanity_loss()
+            self._clear_paper()
+
+        return "\n".join(lines)
 
     def _clear_paper(self):
         """清除当前论文（发表成功后）"""

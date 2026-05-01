@@ -27,7 +27,7 @@ from .states.course_phase import (
 from .states.graduation_phase import GraduationPhaseState
 from .states.holiday_phase import HolidayPhaseState
 from .states.input_states import EventChoiceState
-from .states.research_phase import IdeaDecisionState, ResearchPhaseState
+from .states.research_phase import IdeaDecisionState, ResearchPhaseState, SubmissionTargetState
 from .states.side_activity_states import InvestigationState, SocialState
 
 
@@ -93,6 +93,7 @@ class GameEngine:
                 "holiday.phase": HolidayPhaseState(),
                 "research.phase": ResearchPhaseState(),
                 "research.idea_decision": IdeaDecisionState(),
+                "research.submission_target": SubmissionTargetState(),
             },
         )
         self.state_actions = StateActionExecutor(self)

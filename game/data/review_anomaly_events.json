@@ -1,0 +1,99 @@
+{
+  "events": [
+    {
+      "id": "inhuman_reviewer",
+      "title": "非人审稿人",
+      "description": "你收到了审稿意见。意见本身的学术价值无懈可击，但行文之中夹杂着一些你无法理解的符号和韵律。更奇怪的是，审稿人的署名是一个你从未在任何学术数据库中查到的名字，而其所属机构的官网只有一片漆黑。",
+      "conditions": {
+        "min_tier": "good"
+      },
+      "weight": 40,
+      "effects": {
+        "sanity_min": -10,
+        "sanity_max": -5,
+        "reputation_bonus_min": 3,
+        "reputation_bonus_max": 8,
+        "truth_gain": 3
+      }
+    },
+    {
+      "id": "eldritch_correspondence",
+      "title": "超凡生命通信",
+      "description": "论文被接受的同时，你的邮箱收到了一封没有发件人的邮件。邮件用完美的学术英语祝贺你的发现，并附上了三篇'相关文献'——你打开后发现它们来自未来的日期，且引用格式不属于任何已知期刊。",
+      "conditions": {
+        "min_tier": "disciplinary"
+      },
+      "weight": 30,
+      "effects": {
+        "sanity_min": -15,
+        "sanity_max": -8,
+        "mutation_min": 0.05,
+        "mutation_max": 0.05,
+        "truth_gain": 6
+      }
+    },
+    {
+      "id": "old_one_review",
+      "title": "旧日审稿",
+      "description": "你的论文被一位'资深编辑'亲自审阅。返修意见只有一句话：'这个方向很危险，但已经太晚了。'附带的审稿报告中，所有页码加起来恰好是666，而你确信你提交的论文只有12页。",
+      "conditions": {
+        "min_tier": "top"
+      },
+      "weight": 20,
+      "effects": {
+        "sanity_min": -25,
+        "sanity_max": -15,
+        "mutation_min": 0.10,
+        "mutation_max": 0.20,
+        "truth_gain": 10
+      }
+    },
+    {
+      "id": "anomalous_citations",
+      "title": "反常引用链",
+      "description": "论文发表后的第二天，你发现它被引用了——被一篇发表于1927年的论文。那条引用链像蜘蛛网一样延伸，连接着数十篇不可能互相引用彼此的文献。你意识到学术引用系统中有某种你从未被教过的隐藏结构。",
+      "conditions": {},
+      "weight": 25,
+      "effects": {
+        "sanity_min": 0,
+        "sanity_max": 0,
+        "reputation_bonus_min": 5,
+        "reputation_bonus_max": 5,
+        "mutation_min": 0.03,
+        "mutation_max": 0.03,
+        "truth_gain": 4,
+        "next_submission_reputation_bonus": 5
+      }
+    },
+    {
+      "id": "academic_reality_hit",
+      "title": "学术现实打击",
+      "description": "论文被拒了。但拒稿信中的评审意见让你毛骨悚然——审稿人准确地指出了你实验中所有你自己都没意识到的错误，包括那些你从未写入论文的细节。仿佛有人一直在看着你工作。",
+      "conditions": {
+        "require_rejection": true
+      },
+      "weight": 35,
+      "effects": {
+        "sanity_min": -15,
+        "sanity_max": -5,
+        "mutation_min": 0.00,
+        "mutation_max": 0.02,
+        "truth_gain": 0
+      }
+    }
+  ],
+  "anomaly_chance_modifiers": {
+    "innovation_bonus": {
+      "threshold": 9,
+      "value": 0.05
+    },
+    "outer_god_bonus": {
+      "direction": "OUTER_GOD",
+      "value": 0.05
+    },
+    "mutation_multiplier": 0.05,
+    "mutation_cap": 0.10,
+    "eldritch_advisor_bonus": 0.08,
+    "max_anomaly_chance": 0.45
+  }
+}

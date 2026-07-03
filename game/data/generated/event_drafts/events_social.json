@@ -1,0 +1,52 @@
+{
+  "source_file": "game\\data\\events\\events_social.json",
+  "event_type": "social",
+  "events": [
+    {
+      "id": 9001,
+      "title": "学术会议社交",
+      "description": "你在学术会议上认识了其他高校的研究生，交流了研究进展。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {
+        "reputation": 3,
+        "sanity": 2
+      }
+    },
+    {
+      "id": 9002,
+      "title": "导师严厉批评",
+      "description": "导师在组会上点名批评了你的进度，让你感到压力很大。",
+      "type": "social",
+      "trigger_condition": "low_reputation",
+      "effect": {
+        "sanity": -8,
+        "progress": -2
+      }
+    },
+    {
+      "id": 9003,
+      "title": "同学求助",
+      "description": "一位同学遇到了实验上的难题，请求你的帮助。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "choices": [
+        {
+          "id": "help",
+          "text": "尽力帮助",
+          "effect": {
+            "reputation": 4,
+            "progress": 3
+          }
+        },
+        {
+          "id": "refuse",
+          "text": "婉言拒绝",
+          "effect": {
+            "sanity": -3
+          }
+        }
+      ]
+    }
+  ]
+}

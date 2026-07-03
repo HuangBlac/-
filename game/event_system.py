@@ -3,16 +3,17 @@ import random
 import json
 import os
 from typing import List, Dict, Optional
+from .content_generation import generated_events_path
 
 
 class EventSystem:
     """事件管理器 - 从JSON文件加载事件"""
 
-    def __init__(self):
+    def __init__(self, generated_file: str = None):
         self.events: Dict[str, List[Dict]] = {}
-        self._load_events()
+        self._load_events(generated_file)
 
-    def _load_events(self):
+    def _load_events(self, generated_file: str = None):
         """从JSON文件加载事件"""
         # 获取data/events目录路径
         base_path = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +44,28 @@ class EventSystem:
             except json.JSONDecodeError:
                 print(f"警告: 事件文件 {filepath} 解析失败")
                 self.events[event_type] = []
+
+        self._load_generated_events(generated_file or generated_events_path())
+
+    def _load_generated_events(self, generated_file: str) -> None:
+        """Append optional Ollama-generated events to their declared event types."""
+        if not generated_file or not os.path.exists(generated_file):
+            return
+
+        try:
+            with open(generated_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return
+
+        for event in data.get('events', []):
+            if not isinstance(event, dict):
+                continue
+            event_type = event.get('type', 'random')
+            if event_type not in self.events:
+                event_type = 'random'
+                event['type'] = event_type
+            self.events[event_type].append(event)
 
     def get_events(self, event_type: str) -> List[Dict]:
         """获取指定类型的事件列表"""

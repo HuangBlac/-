@@ -1,0 +1,68 @@
+{
+  "source_file": "game\\data\\events\\events_advisor.json",
+  "event_type": "advisor",
+  "events": [
+    {
+      "id": 9001,
+      "title": "论文修改意见",
+      "description": "导师仔细审阅了你的论文初稿，给出了详细的修改意见。",
+      "type": "advisor",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -3,
+        "progress": 5
+      }
+    },
+    {
+      "id": 9002,
+      "title": "导师邀请聚餐",
+      "description": "导师邀请你和同门聚餐，增进感情。",
+      "type": "advisor",
+      "trigger_condition": "normal",
+      "choices": [
+        {
+          "id": "attend",
+          "text": "参加聚餐",
+          "effect": {
+            "reputation": 2,
+            "sanity": -1
+          }
+        },
+        {
+          "id": "skip",
+          "text": "以忙为由婉拒",
+          "effect": {
+            "reputation": -1,
+            "sanity": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": 9003,
+      "title": "导师推荐实习",
+      "description": "导师介绍了一个业界实习机会，但可能需要暂停研究进度。",
+      "type": "advisor",
+      "trigger_condition": "high_reputation",
+      "choices": [
+        {
+          "id": "accept",
+          "text": "接受实习",
+          "effect": {
+            "progress": -10,
+            "reputation": 5,
+            "SOC": 3
+          }
+        },
+        {
+          "id": "decline",
+          "text": "专注于研究",
+          "effect": {
+            "reputation": 1,
+            "progress": 5
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "events": [
+    {
+      "id": 9001,
+      "title": "深夜实验室的奇怪声音",
+      "description": "在加班的深夜，你听到实验室角落传来低沉的嗡鸣声，像是某种未知的振动。",
+      "type": "random",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -1,
+        "progress": 2
+      }
+    },
+    {
+      "id": 9002,
+      "title": "导师的论文修改意见",
+      "description": "导师的邮件充满了修改标记，你需要熬夜重写大部分内容。",
+      "type": "academic",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -2,
+        "INT": 1
+      }
+    },
+    {
+      "id": 9003,
+      "title": "课题组聚餐",
+      "description": "实验室组织聚餐，大家分享科研趣事，气氛轻松。",
+      "type": "social",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": 2,
+        "SOC": 1
+      }
+    },
+    {
+      "id": 9004,
+      "title": "周末电影之夜",
+      "description": "你放下手中的论文，看了一部科幻电影，暂时忘却现实的压力。",
+      "type": "entertainment",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": 3
+      }
+    }
+  ]
+}

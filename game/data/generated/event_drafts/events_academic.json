@@ -1,0 +1,56 @@
+{
+  "source_file": "game\\data\\events\\events_academic.json",
+  "event_type": "academic",
+  "events": [
+    {
+      "id": 9001,
+      "title": "意外发现",
+      "description": "实验过程中，你意外观察到一个反常现象，可能是新发现的征兆。",
+      "type": "academic",
+      "trigger_condition": "research",
+      "choices": [
+        {
+          "id": "pursue",
+          "text": "深入探索",
+          "effect": {
+            "progress": 10,
+            "INT": 5,
+            "sanity": -5
+          }
+        },
+        {
+          "id": "record",
+          "text": "记录但不动摇当前计划",
+          "effect": {
+            "progress": 3,
+            "sanity": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": 9002,
+      "title": "论文大修",
+      "description": "审稿人要求对你的论文进行大幅修改，但认为有潜力。",
+      "type": "academic",
+      "trigger_condition": "submit",
+      "effect": {
+        "progress": 8,
+        "sanity": -5,
+        "reputation": 2
+      }
+    },
+    {
+      "id": 9003,
+      "title": "经典重读",
+      "description": "你重新阅读了一篇领域内的经典文献，悟出了新的理解。",
+      "type": "academic",
+      "trigger_condition": "read",
+      "effect": {
+        "EDU": 3,
+        "INT": 2,
+        "progress": 5
+      }
+    }
+  ]
+}

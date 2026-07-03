@@ -1,0 +1,54 @@
+{
+  "source_file": "game\\data\\events\\events_mythos.json",
+  "event_type": "mythos",
+  "events": [
+    {
+      "id": 9001,
+      "title": "深潜者之梦",
+      "description": "你反复梦见自己在漆黑的海底行走，四周环绕着长着鱼头的人形生物，它们向你低语着古老的语言。",
+      "type": "mythos",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -10,
+        "INT": 3
+      }
+    },
+    {
+      "id": 9002,
+      "title": "无名祭祀书",
+      "description": "你在图书馆中偶然发现一本用未知文字写成的古籍，书页间夹着一张描绘着巨大触手的插图。",
+      "type": "mythos",
+      "trigger_condition": "research",
+      "choices": [
+        {
+          "id": "read_book",
+          "text": "研读书籍",
+          "effect": {
+            "EDU": 8,
+            "sanity": -20,
+            "mutation": 0.05
+          }
+        },
+        {
+          "id": "close_book",
+          "text": "合上书页",
+          "effect": {
+            "sanity": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": 9003,
+      "title": "星之彩的感染",
+      "description": "你的皮肤上开始浮现出微微发光的异样色彩，夜晚时尤为明显，你感到一种不属于此世的能量在体内流淌。",
+      "type": "mythos",
+      "trigger_condition": "low_sanity",
+      "effect": {
+        "sanity": -10,
+        "mutation": 0.15,
+        "INT": 5
+      }
+    }
+  ]
+}

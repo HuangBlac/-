@@ -4,6 +4,7 @@ import json
 import os
 from typing import List, Dict
 from .character import ResearchDirection, ability_check, CheckResult
+from .content_generation import generated_courses_path
 
 
 class Course:
@@ -25,7 +26,7 @@ class Course:
         return f"<Course: {self.name} ({self.course_type})>"
 
 
-def load_courses_from_json() -> tuple:
+def load_courses_from_json(generated_file: str = None) -> tuple:
     """从JSON文件加载课程数据
 
     Returns:
@@ -38,6 +39,8 @@ def load_courses_from_json() -> tuple:
     try:
         with open(courses_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
+
+        _merge_generated_courses(data, generated_file or generated_courses_path())
 
         # 加载必修课
         required_courses = []
@@ -86,6 +89,23 @@ def load_courses_from_json() -> tuple:
     except json.JSONDecodeError:
         print(f"警告: 课程文件 {courses_file} 解析失败，使用默认课程")
         return _get_default_courses()
+
+
+def _merge_generated_courses(data: Dict, generated_file: str) -> None:
+    """Append optional Ollama-generated courses to the base course data."""
+    if not generated_file or not os.path.exists(generated_file):
+        return
+
+    try:
+        with open(generated_file, 'r', encoding='utf-8') as f:
+            generated = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return
+
+    for key in ('required_courses', 'elective_courses', 'hidden_courses'):
+        courses = generated.get(key, [])
+        if isinstance(courses, list):
+            data.setdefault(key, []).extend(courses)
 
 
 def _get_default_courses() -> tuple:

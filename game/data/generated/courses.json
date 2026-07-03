@@ -1,0 +1,48 @@
+{
+  "required_courses": [
+    {
+      "name": "高等量子力学",
+      "type": "必修",
+      "description": "掌握量子力学的高等理论，为科研打下基础。",
+      "attributes": {
+        "EDU": 2,
+        "SEN": -1
+      },
+      "credits": 3
+    }
+  ],
+  "elective_courses": [
+    {
+      "name": "古代文献研究",
+      "type": "选修",
+      "description": "解读尘封的古代文本，可能发现未知的知识。",
+      "attributes": {
+        "INT": 2,
+        "SOC": 1
+      },
+      "credits": 2
+    },
+    {
+      "name": "社会网络分析",
+      "type": "选修",
+      "description": "分析人际关系网络，揭示学术圈中的隐秘联系。",
+      "attributes": {
+        "INT": 1,
+        "SOC": 2
+      },
+      "credits": 2
+    }
+  ],
+  "hidden_courses": [
+    {
+      "name": "不可名状之算术",
+      "type": "隐藏",
+      "description": "一种超越常规的数学体系，学习后可能改变认知。",
+      "attributes": {
+        "SEN": 3
+      },
+      "credits": 5,
+      "hidden": true
+    }
+  ]
+}

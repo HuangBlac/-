@@ -1,0 +1,49 @@
+{
+  "required_courses": [
+    {
+      "name": "拉莱耶语入门",
+      "type": "必修",
+      "description": "学习古老文献中反复出现的基础音节，偶尔会听见它们自己回响。",
+      "attributes": {"EDU": 2, "SEN": 1},
+      "credits": 3
+    },
+    {
+      "name": "形式科学导论",
+      "type": "必修",
+      "description": "数学、逻辑和实验记录规范，是保持清醒的最低防线。",
+      "attributes": {"EDU": 2, "INT": 2},
+      "credits": 3
+    }
+  ],
+  "elective_courses": [
+    {
+      "name": "非欧几何与地下走廊",
+      "type": "选修",
+      "description": "研究无法正确画在纸上的空间结构。",
+      "attributes": {"INT": 2, "SEN": 1},
+      "credits": 2
+    },
+    {
+      "name": "导师邮件生存术",
+      "type": "选修",
+      "description": "在凌晨两点的修改意见中维持行动力。",
+      "attributes": {"STR": 2, "SOC": 1},
+      "credits": 2
+    },
+    {
+      "name": "神话文本阅读",
+      "type": "选修",
+      "description": "阅读被反复划掉的段落，理解它们为什么不能公开发表。",
+      "attributes": {"EDU": 2, "SEN": 1},
+      "credits": 3
+    },
+    {
+      "name": "科研组会表达",
+      "type": "选修",
+      "description": "把尚未稳定的实验结果讲得像已经稳定。",
+      "attributes": {"SOC": 2, "INT": 1},
+      "credits": 2
+    }
+  ],
+  "hidden_courses": []
+}

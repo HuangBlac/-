@@ -30,3 +30,8 @@ tests/
 CLAUDE.md
 Agents.md
 docs/
+design/gdd/
+
+# Coverage
+.coverage
+htmlcov/

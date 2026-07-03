@@ -1,0 +1,9 @@
+{
+  "game": {
+    "final_week": 8,
+    "elective_count": 3
+  },
+  "debug": {
+    "event_trigger_chance": 0.35
+  }
+}

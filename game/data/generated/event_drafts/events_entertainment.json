@@ -1,0 +1,39 @@
+{
+  "source_file": "game\\data\\events\\events_entertainment.json",
+  "event_type": "entertainment",
+  "events": [
+    {
+      "id": 9001,
+      "title": "看虚拟主播直播",
+      "description": "你打开了熟悉的虚拟主播直播间，跟着弹幕一起吐槽互动，不知不觉就看了两个小时。虽然笑得很开心，但时间就这样溜走了。",
+      "type": "entertainment",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": 3,
+        "progress": -2
+      }
+    },
+    {
+      "id": 9002,
+      "title": "玩桌游",
+      "description": "你被拉去参加了一场《血染钟楼》的对局，在谎言与推理中度过了一个下午，虽然脑细胞死伤无数，但那种智力博弈的快感让你欲罢不能。",
+      "type": "entertainment",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": 5,
+        "INT": 1
+      }
+    },
+    {
+      "id": 9003,
+      "title": "逛同人展",
+      "description": "你去了附近举办的同人展，淘到了不少喜欢的周边和本子，和同好们交流了一番，感到社交能量得到了补充，只是钱包瘦了一大圈。",
+      "type": "entertainment",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": 6,
+        "SOC": 1
+      }
+    }
+  ]
+}

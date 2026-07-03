@@ -1,0 +1,39 @@
+{
+  "source_file": "game\\data\\events\\events_holiday.json",
+  "event_type": "holiday",
+  "events": [
+    {
+      "id": 9001,
+      "title": "志愿者活动",
+      "description": "你参加了一次社区志愿者活动，帮助他人的同时自己也感到快乐。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": 10,
+        "SOC": 5
+      }
+    },
+    {
+      "id": 9002,
+      "title": "学术会议",
+      "description": "你参加了一个小型学术会议，听取了前沿报告，拓展了视野。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {
+        "EDU": 10,
+        "reputation": 5
+      }
+    },
+    {
+      "id": 9003,
+      "title": "户外运动",
+      "description": "你去登山和骑行，锻炼了身体，心情也变得舒畅。",
+      "type": "holiday",
+      "trigger_condition": "normal",
+      "effect": {
+        "STR": 5,
+        "sanity": 5
+      }
+    }
+  ]
+}

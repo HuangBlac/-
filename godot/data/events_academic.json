@@ -1,0 +1,20 @@
+{
+  "events": [
+    {
+      "id": 9101,
+      "title": "文献发现",
+      "description": "你在文献中发现一篇非常重要的论文，它解释了你最近一直绕不过去的问题。",
+      "type": "academic",
+      "trigger_condition": "read",
+      "effect": {"EDU": 2, "INT": 2, "progress": 5}
+    },
+    {
+      "id": 9102,
+      "title": "实验数据异常",
+      "description": "实验数据出现无法解释的周期性波动。它看起来像在回应你的注释。",
+      "type": "academic",
+      "trigger_condition": "research",
+      "effect": {"progress": 8, "sanity": -4, "SEN": 1}
+    }
+  ]
+}

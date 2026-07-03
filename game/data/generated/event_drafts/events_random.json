@@ -1,0 +1,39 @@
+{
+  "source_file": "game\\data\\events\\events_random.json",
+  "event_type": "random",
+  "events": [
+    {
+      "id": 9001,
+      "title": "实验室白大褂",
+      "description": "你穿上晾在椅背上的白大褂，感觉口袋里有个硬物。掏出来一看，是上一任实验员的工作证，照片里的人在对你微笑。",
+      "type": "random",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -2,
+        "INT": 1
+      }
+    },
+    {
+      "id": 9002,
+      "title": "图书馆借阅记录",
+      "description": "你借的那本古籍上，有人用铅笔在页边写满了注释，笔迹和你的出奇相似。可你在这本书之前从未碰过。",
+      "type": "random",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -1,
+        "EDU": 2
+      }
+    },
+    {
+      "id": 9003,
+      "title": "空调异响",
+      "description": "实验室的空调突然开始有节奏地咔咔响，像是摩斯电码。你录下来分析，发现是一串坐标，指向地下三层从未开放的档案室。",
+      "type": "random",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -3,
+        "progress": 2
+      }
+    }
+  ]
+}

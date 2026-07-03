@@ -1,0 +1,83 @@
+{
+  "source_file": "game\\data\\events\\events_investigation.json",
+  "event_type": "investigation",
+  "events": [
+    {
+      "id": 9001,
+      "title": "禁忌书架",
+      "description": "你在镇上的一家旧书店里发现了一个隐藏的书架，上面全是禁书。",
+      "type": "investigation",
+      "trigger_condition": "normal",
+      "choices": [
+        {
+          "id": "borrow",
+          "text": "借阅一本",
+          "effect": {
+            "EDU": 10,
+            "sanity": -12
+          }
+        },
+        {
+          "id": "flip",
+          "text": "快速翻阅",
+          "effect": {
+            "EDU": 3,
+            "sanity": -5
+          }
+        },
+        {
+          "id": "leave",
+          "text": "离开",
+          "effect": {
+            "sanity": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 9002,
+      "title": "地下密室",
+      "description": "你偶然发现学校地下有一个被封锁的密室，里面传出奇怪的声音。",
+      "type": "investigation",
+      "trigger_condition": "normal",
+      "effect": {
+        "INT": 6,
+        "sanity": -8,
+        "progress": 5
+      }
+    },
+    {
+      "id": 9003,
+      "title": "图书馆幻影",
+      "description": "深夜在图书馆，你看到了一个若隐若现的人影，似乎在指引你。",
+      "type": "investigation",
+      "trigger_condition": "rare",
+      "choices": [
+        {
+          "id": "follow",
+          "text": "跟着人影走",
+          "effect": {
+            "EDU": 12,
+            "sanity": -15,
+            "INT": 10
+          }
+        },
+        {
+          "id": "record",
+          "text": "用相机记录",
+          "effect": {
+            "EDU": 4,
+            "sanity": -8
+          }
+        },
+        {
+          "id": "ignore",
+          "text": "无视",
+          "effect": {
+            "sanity": 2
+          }
+        }
+      ]
+    }
+  ]
+}

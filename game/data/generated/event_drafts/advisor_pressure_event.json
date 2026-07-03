@@ -1,0 +1,54 @@
+{
+  "source_file": "game\\data\\events\\advisor_pressure_event.json",
+  "event_type": "advisor_pressure",
+  "events": [
+    {
+      "id": 9001,
+      "title": "周末加班要求",
+      "description": "导师通知你周末必须来实验室加班，称项目进度严重滞后。",
+      "type": "advisor_pressure",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -5,
+        "progress": 5
+      }
+    },
+    {
+      "id": 9002,
+      "title": "论文批评",
+      "description": "导师严厉批评了你提交的论文草稿，指出多处逻辑错误。",
+      "type": "advisor_pressure",
+      "trigger_condition": "research",
+      "effect": {
+        "sanity": -8,
+        "reputation": -3
+      }
+    },
+    {
+      "id": 9003,
+      "title": "召唤仪式",
+      "description": "导师让你参与一场诡异的召唤仪式，说这对研究至关重要。",
+      "type": "advisor_pressure",
+      "trigger_condition": "low_sanity",
+      "choices": [
+        {
+          "id": "join",
+          "text": "参与仪式",
+          "effect": {
+            "sanity": -15,
+            "mutation": 0.03,
+            "INT": 5
+          }
+        },
+        {
+          "id": "refuse",
+          "text": "婉拒",
+          "effect": {
+            "sanity": -5,
+            "reputation": -5
+          }
+        }
+      ]
+    }
+  ]
+}

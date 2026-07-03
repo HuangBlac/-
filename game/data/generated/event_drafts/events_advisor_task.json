@@ -1,0 +1,40 @@
+{
+  "source_file": "game\\data\\events\\events_advisor_task.json",
+  "event_type": "advisor_task",
+  "events": [
+    {
+      "id": 9001,
+      "title": "修改论文",
+      "description": "导师让你帮忙修改一篇即将投稿的论文，需要反复调整格式和语言。",
+      "type": "advisor_task",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -8,
+        "progress": 10,
+        "reputation": 2
+      }
+    },
+    {
+      "id": 9002,
+      "title": "调试代码",
+      "description": "导师让你调试一段实验代码，但代码里有很多bug需要修复。",
+      "type": "advisor_task",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -6,
+        "progress": 8
+      }
+    },
+    {
+      "id": 9003,
+      "title": "整理文献",
+      "description": "导师让你帮忙整理参考文献格式，需要按照期刊要求调整。",
+      "type": "advisor_task",
+      "trigger_condition": "normal",
+      "effect": {
+        "sanity": -4,
+        "reputation": 1
+      }
+    }
+  ]
+}
